@@ -1,0 +1,11 @@
+.DS_Store
+vscode/
+__pycache__/
+bin/
+lib/
+include/
+pyvenv.cfg
+.DS_Store
+data/
+share/
+etc/
