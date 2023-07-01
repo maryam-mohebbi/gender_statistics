@@ -1,0 +1,103 @@
+Series Name,Series Code
+"Labor force, female",SL.TLF.TOTL.FE.IN
+"Labor force, male",SL.TLF.TOTL.MA.IN
+"Labor force, total",SL.TLF.TOTL.IN
+Length of paid maternity leave (calendar days),SH.MMR.LEVE
+Length of paid parental leave for father (calendar days),SH.PAR.LEVE.MA
+Length of paid parental leave for mother (calendar days),SH.PAR.LEVE.FE
+Length of paid paternity leave (calendar days),SH.PTR.LEVE
+Length of paid shared parental leave (calendar days),SH.PAR.LEVE
+Women Business and the Law Index Score (scale 1-100),SG.LAW.INDX
+"Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)",SG.LAW.INDX.EN
+"Women, Business and the Law: Mobility Indicator Score (scale 1-100)",SG.LAW.INDX.MO
+"Women, Business and the Law: Pay Indicator Score (scale 1-100)",SG.LAW.INDX.PY
+"Women, Business and the Law: Workplace Indicator Score (scale 1-100)",SG.LAW.INDX.WP
+"Women, Business and the Law: Pension Indicator Score (scale 1-100)",SG.LAW.INDX.PE
+"Women, Business and the Law: Parenthood Indicator Score (scale 1-100)",SG.LAW.INDX.PR
+"Women, Business and the Law: Marriage Indicator Score (scale 1-100)",SG.LAW.INDX.MR
+"Women, Business and the Law: Assets Indicator Score (scale 1-100)",SG.LAW.INDX.AS
+GDP (current US$),NY.GDP.MKTP.CD
+GDP per capita (constant 2010 US$),NY.GDP.PCAP.KD
+GDP per capita (Current US$),NY.GDP.PCAP.CD
+"GNI per capita, Atlas method (current US$)",NY.GNP.PCAP.CD
+"GNI, Atlas method (current US$)",NY.GNP.ATLS.CD
+"School enrollment, tertiary (gross), gender parity index (GPI)",SE.ENR.TERT.FM.ZS
+"Adolescent fertility rate (births per 1,000 women ages 15-19)",SP.ADO.TFRT
+"Mortality rate, adult, female (per 1,000 female adults)",SP.DYN.AMRT.FE
+"Mortality rate, adult, male (per 1,000 male adults)",SP.DYN.AMRT.MA
+"Mortality rate, infant (per 1,000 live births)",SP.DYN.IMRT.IN
+"Mortality rate, infant, female (per 1,000 live births)",SP.DYN.IMRT.FE.IN
+"Mortality rate, infant, male (per 1,000 live births)",SP.DYN.IMRT.MA.IN
+"Mortality rate, under-5 (per 1,000 live births)",SH.DYN.MORT
+"Mortality rate, under-5, female (per 1,000 live births)",SH.DYN.MORT.FE
+"Mortality rate, under-5, male (per 1,000 live births)",SH.DYN.MORT.MA
+Number of infant deaths,SH.DTH.IMRT
+"Number of infant deaths, female",SH.DTH.IMRT.FE
+"Number of infant deaths, male",SH.DTH.IMRT.MA
+"Number of under-five deaths, female",SH.DTH.MORT.FE
+"Number of under-five deaths, male",SH.DTH.MORT.MA
+"Age population, age 0, female, interpolated",SP.POP.AG00.FE.IN
+"Age population, age 0, male, interpolated",SP.POP.AG00.MA.IN
+"Age population, age 01, female, interpolated",SP.POP.AG01.FE.IN
+"Age population, age 01, male, interpolated",SP.POP.AG01.MA.IN
+"Age population, age 02, female, interpolated",SP.POP.AG02.FE.IN
+"Age population, age 02, male, interpolated",SP.POP.AG02.MA.IN
+"Age population, age 03, female, interpolated",SP.POP.AG03.FE.IN
+"Age population, age 03, male, interpolated",SP.POP.AG03.MA.IN
+"Age population, age 04, female, interpolated",SP.POP.AG04.FE.IN
+"Age population, age 04, male, interpolated",SP.POP.AG04.MA.IN
+"Age population, age 05, female, interpolated",SP.POP.AG05.FE.IN
+"Age population, age 05, male, interpolated",SP.POP.AG05.MA.IN
+"Birth rate, crude (per 1,000 people)",SP.DYN.CBRT.IN
+"Death rate, crude (per 1,000 people)",SP.DYN.CDRT.IN
+"Fertility rate, total (births per woman)",SP.DYN.TFRT.IN
+"Life expectancy at birth, female (years)",SP.DYN.LE00.FE.IN
+"Life expectancy at birth, male (years)",SP.DYN.LE00.MA.IN
+"Life expectancy at birth, total (years)",SP.DYN.LE00.IN
+"Population ages 00-04, female",SP.POP.0004.FE
+"Population ages 00-04, male",SP.POP.0004.MA
+"Population ages 0-14, female",SP.POP.0014.FE.IN
+"Population ages 0-14, male",SP.POP.0014.MA.IN
+"Population ages 0-14, total",SP.POP.0014.TO
+"Population ages 05-09, female",SP.POP.0509.FE
+"Population ages 05-09, male",SP.POP.0509.MA
+"Population ages 10-14, female",SP.POP.1014.FE
+"Population ages 10-14, male",SP.POP.1014.MA
+"Population ages 15-19, female",SP.POP.1519.FE
+"Population ages 15-19, male",SP.POP.1519.MA
+"Population ages 15-64, female",SP.POP.1564.FE.IN
+"Population ages 15-64, male",SP.POP.1564.MA.IN
+"Population ages 15-64, total",SP.POP.1564.TO
+"Population ages 20-24, female",SP.POP.2024.FE
+"Population ages 20-24, male",SP.POP.2024.MA
+"Population ages 25-29, female",SP.POP.2529.FE
+"Population ages 25-29, male",SP.POP.2529.MA
+"Population ages 30-34, female",SP.POP.3034.FE
+"Population ages 30-34, male",SP.POP.3034.MA
+"Population ages 35-39, female",SP.POP.3539.FE
+"Population ages 35-39, male",SP.POP.3539.MA
+"Population ages 40-44, female",SP.POP.4044.FE
+"Population ages 40-44, male",SP.POP.4044.MA
+"Population ages 45-49, female",SP.POP.4549.FE
+"Population ages 45-49, male",SP.POP.4549.MA
+"Population ages 50-54, female",SP.POP.5054.FE
+"Population ages 50-54, male",SP.POP.5054.MA
+"Population ages 55-59, female",SP.POP.5559.FE
+"Population ages 55-59, male",SP.POP.5559.MA
+"Population ages 60-64, female",SP.POP.6064.FE
+"Population ages 60-64, male",SP.POP.6064.MA
+"Population ages 65 and above, female",SP.POP.65UP.FE.IN
+"Population ages 65 and above, male",SP.POP.65UP.MA.IN
+"Population ages 65 and above, total",SP.POP.65UP.TO
+"Population ages 65-69, female",SP.POP.6569.FE
+"Population ages 65-69, male",SP.POP.6569.MA
+"Population ages 70-74, female",SP.POP.7074.FE
+"Population ages 70-74, male",SP.POP.7074.MA
+"Population ages 75-79, female",SP.POP.7579.FE
+"Population ages 75-79, male",SP.POP.7579.MA
+"Population ages 80 and above, female",SP.POP.80UP.FE
+"Population ages 80 and above, male",SP.POP.80UP.MA
+"Population, female",SP.POP.TOTL.FE.IN
+"Population, male",SP.POP.TOTL.MA.IN
+"Population, total",SP.POP.TOTL
+Sex ratio at birth (male births per female births),SP.POP.BRTH.MF
