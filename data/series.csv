@@ -4,6 +4,34 @@ A woman can work at night in the same way as a man (1=yes; 0=no),SG.NGT.WORK.EQ
 A woman can work in a job deemed dangerous in the same way as a man (1=yes; 0=no),SG.DNG.WORK.DN.EQ
 A woman can work in an industrial job in the same way as a man (1=yes; 0=no),SG.IND.WORK.EQ
 Dismissal of pregnant workers is prohibited (1=yes; 0=no),SG.DML.PRGW
+"Employers, female (% of female employment) (modeled ILO estimate)",SL.EMP.MPYR.FE.ZS
+"Employers, male (% of male employment) (modeled ILO estimate)",SL.EMP.MPYR.MA.ZS
+"Employers, total (% of total employment) (modeled ILO estimate)",SL.EMP.MPYR.ZS
+Employment in agriculture (% of total employment) (modeled ILO estimate),SL.AGR.EMPL.ZS
+"Employment in agriculture, female (% of female employment) (modeled ILO estimate)",SL.AGR.EMPL.FE.ZS
+"Employment in agriculture, male (% of male employment) (modeled ILO estimate)",SL.AGR.EMPL.MA.ZS
+Employment in industry (% of total employment) (modeled ILO estimate),SL.IND.EMPL.ZS
+"Employment in industry, female (% of female employment) (modeled ILO estimate)",SL.IND.EMPL.FE.ZS
+"Employment in industry, male (% of male employment) (modeled ILO estimate)",SL.IND.EMPL.MA.ZS
+Employment in services (% of total employment) (modeled ILO estimate),SL.SRV.EMPL.ZS
+"Employment in services, female (% of female employment) (modeled ILO estimate)",SL.SRV.EMPL.FE.ZS
+"Employment in services, male (% of male employment) (modeled ILO estimate)",SL.SRV.EMPL.MA.ZS
+"Employment to population ratio, 15+, female (%) (modeled ILO estimate)",SL.EMP.TOTL.SP.FE.ZS
+"Employment to population ratio, 15+, male (%) (modeled ILO estimate)",SL.EMP.TOTL.SP.MA.ZS
+"Employment to population ratio, 15+, total (%) (modeled ILO estimate)",SL.EMP.TOTL.SP.ZS
+"Employment to population ratio, ages 15-24, female (%) (modeled ILO estimate)",SL.EMP.1524.SP.FE.ZS
+"Employment to population ratio, ages 15-24, male (%) (modeled ILO estimate)",SL.EMP.1524.SP.MA.ZS
+"Employment to population ratio, ages 15-24, total (%) (modeled ILO estimate)",SL.EMP.1524.SP.ZS
+"Labor force participation rate for ages 15-24, female (%) (modeled ILO estimate)",SL.TLF.ACTI.1524.FE.ZS
+"Labor force participation rate for ages 15-24, total (%) (modeled ILO estimate)",SL.TLF.ACTI.1524.ZS
+"Labor force participation rate, female (% of female population ages 15+) (modeled ILO estimate)",SL.TLF.CACT.FE.ZS
+"Labor force participation rate, female (% of female population ages 15-64) (modeled ILO estimate)",SL.TLF.ACTI.FE.ZS
+"Labor force participation rate, male (% of male population ages 15-64) (modeled ILO estimate)",SL.TLF.ACTI.MA.ZS
+"Labor force participation rate, total (% of total population ages 15-64) (modeled ILO estimate)",SL.TLF.ACTI.ZS
+"Labor force, female",SL.TLF.TOTL.FE.IN
+"Labor force, female (% of total labor force)",SL.TLF.TOTL.FE.ZS
+"Labor force, male",SL.TLF.TOTL.MA.IN
+"Labor force, total",SL.TLF.TOTL.IN
 Law mandates equal remuneration for females and males for work of equal value (1=yes; 0=no),SG.LAW.EQRM.WK
 Length of paid maternity leave (calendar days),SH.MMR.LEVE
 Length of paid parental leave for father (calendar days),SH.PAR.LEVE.MA
@@ -13,6 +41,11 @@ Length of paid shared parental leave (calendar days),SH.PAR.LEVE
 There is paid parental leave (1=yes; 0=no),SH.PAR.LEVE.AL
 Paid leave is available to fathers (1=yes; 0=no),SH.PTR.LEVE.AL
 Paid leave of at least 14 weeks available to mothers (1=yes; 0=no),SH.MMR.LEVE.AL
+Ratio of female to male labor force participation rate (%) (modeled ILO estimate),SL.TLF.CACT.FM.ZS
+Ratio of female to male youth unemployment rate (% ages 15-24) (modeled ILO estimate),SL.UEM.1524.FM.ZS
+"Self-employed, female (% of female employment) (modeled ILO estimate)",SL.EMP.SELF.FE.ZS
+"Self-employed, male (% of male employment) (modeled ILO estimate)",SL.EMP.SELF.MA.ZS
+"Self-employed, total (% of total employment) (modeled ILO estimate)",SL.EMP.SELF.ZS
 The age at which men and women can retire with full pension benefits is the same (1=yes; 0=no),SG.AGE.FUPN.EQ
 The age at which men and women can retire with partial pension benefits is the same (1=yes; 0=no),SG.AGE.PAPN.EQ
 The government administers 100% of maternity leave benefits (1=yes; 0=no),SH.MMR.LEVE.GT
@@ -20,6 +53,18 @@ The law prohibits discrimination in employment based on gender (1=yes; 0=no),SG.
 The law provides for the valuation of nonmonetary contributions (1=yes; 0=no),SG.LAW.NMCN
 The mandatory retirement age for men and women is the same (1=yes; 0=no),SG.AGE.MRET.EQ
 There are periods of absence due to childcare accounted for in pension benefits (1=yes; 0=no),SG.ABS.PENB
+"Unemployment, female (% of female labor force) (modeled ILO estimate)",SL.UEM.TOTL.FE.ZS
+"Unemployment, male (% of male labor force) (modeled ILO estimate)",SL.UEM.TOTL.MA.ZS
+"Unemployment, total (% of total labor force) (modeled ILO estimate)",SL.UEM.TOTL.ZS
+"Unemployment, youth female (% of female labor force ages 15-24) (modeled ILO estimate)",SL.UEM.1524.FE.ZS
+"Unemployment, youth male (% of male labor force ages 15-24) (modeled ILO estimate)",SL.UEM.1524.MA.ZS
+"Unemployment, youth total (% of total labor force ages 15-24) (modeled ILO estimate)",SL.UEM.1524.ZS
+"Vulnerable employment, female (% of female employment) (modeled ILO estimate)",SL.EMP.VULN.FE.ZS
+"Vulnerable employment, male (% of male employment) (modeled ILO estimate)",SL.EMP.VULN.MA.ZS
+"Vulnerable employment, total (% of total employment) (modeled ILO estimate)",SL.EMP.VULN.ZS
+"Wage and salaried workers, female (% of female employment) (modeled ILO estimate)",SL.EMP.WORK.FE.ZS
+"Wage and salaried workers, male (% of male employment) (modeled ILO estimate)",SL.EMP.WORK.MA.ZS
+"Wage and salaried workers, total (% of total employment) (modeled ILO estimate)",SL.EMP.WORK.ZS
 Women Business and the Law Index Score (scale 1-100),SG.LAW.INDX
 "Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)",SG.LAW.INDX.EN
 "Women, Business and the Law: Mobility Indicator Score (scale 1-100)",SG.LAW.INDX.MO
@@ -42,15 +87,21 @@ GDP per capita (Current US$),NY.GDP.PCAP.CD
 Male and female surviving spouses have equal rights to inherit assets (1=yes; 0=no),SG.IHT.ASST.EQ
 Men and women have equal ownership rights to immovable property (1=yes; 0=no),SG.OWN.PRRT.IM
 "School enrollment, preprimary (% gross)",SE.PRE.ENRR
+"School enrollment, preprimary, male (% gross)",SE.PRE.ENRR.MA
+"School enrollment, preprimary, female (% gross)",SE.PRE.ENRR.FE
 "School enrollment, primary (% gross)",SE.PRM.ENRR
 "School enrollment, primary, male (% gross)",SE.PRM.ENRR.MA
 "School enrollment, primary, female (% gross)",SE.PRM.ENRR.FE
 "School enrollment, primary (gross), gender parity index (GPI)",SE.ENR.PRIM.FM.ZS
+"School enrollment, primary and secondary (gross), gender parity index (GPI)",SE.ENR.PRSC.FM.ZS
 "School enrollment, secondary (% gross)",SE.SEC.ENRR
 "School enrollment, secondary, male (% gross)",SE.SEC.ENRR.MA
 "School enrollment, secondary, female (% gross)",SE.SEC.ENRR.FE
 "School enrollment, secondary (gross), gender parity index (GPI)",SE.ENR.SECO.FM.ZS
 "School enrollment, tertiary (% gross)",SE.TER.ENRR
+"School enrollment, tertiary, male (% gross)",SE.TER.ENRR.MA
+"School enrollment, tertiary, female (% gross)",SE.TER.ENRR.FE
+"School enrollment, tertiary (gross), gender parity index (GPI)",SE.ENR.TERT.FM.ZS
 The law grants spouses equal administrative authority over assets during marriage (1=yes; 0=no),SG.LAW.ASST.AR
 The law prohibits discrimination in access to credit based on gender (1=yes; 0=no),SG.LAW.CRDD.GR
 "Vocational and Technical enrolment (% of total secondary enrolment), total",SE.SEC.ENRL.VO.ZS
