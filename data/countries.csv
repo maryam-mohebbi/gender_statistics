@@ -3,10 +3,13 @@ Afghanistan,AFG
 Albania,ALB
 Algeria,DZA
 Angola,AGO
+Antigua and Barbuda,ATG
+Argentina,ARG
 Armenia,ARM
 Australia,AUS
 Austria,AUT
 Azerbaijan,AZE
+"Bahamas, The",BHS
 Bahrain,BHR
 Bangladesh,BGD
 Barbados,BRB
@@ -15,8 +18,10 @@ Belgium,BEL
 Belize,BLZ
 Benin,BEN
 Bhutan,BTN
+Bolivia,BOL
 Botswana,BWA
 Brazil,BRA
+Brunei Darussalam,BRN
 Bulgaria,BGR
 Burkina Faso,BFA
 Burundi,BDI
@@ -39,6 +44,7 @@ Cyprus,CYP
 Czechia,CZE
 Denmark,DNK
 Djibouti,DJI
+Dominica,DMA
 Dominican Republic,DOM
 Ecuador,ECU
 "Egypt, Arab Rep.",EGY
@@ -57,10 +63,12 @@ Georgia,GEO
 Germany,DEU
 Ghana,GHA
 Greece,GRC
+Grenada,GRD
 Guatemala,GTM
 Guinea,GIN
 Guinea-Bissau,GNB
 Guyana,GUY
+Haiti,HTI
 Honduras,HND
 Hungary,HUN
 Iceland,ISL
@@ -76,6 +84,8 @@ Japan,JPN
 Jordan,JOR
 Kazakhstan,KAZ
 Kenya,KEN
+Kiribati,KIR
+"Korea, Rep.",KOR
 Kuwait,KWT
 Kyrgyz Republic,KGZ
 Lao PDR,LAO
@@ -92,9 +102,11 @@ Malaysia,MYS
 Maldives,MDV
 Mali,MLI
 Malta,MLT
+Marshall Islands,MHL
 Mauritania,MRT
 Mauritius,MUS
 Mexico,MEX
+"Micronesia, Fed. Sts.",FSM
 Moldova,MDA
 Mongolia,MNG
 Montenegro,MNE
@@ -112,6 +124,7 @@ North Macedonia,MKD
 Norway,NOR
 Oman,OMN
 Pakistan,PAK
+Palau,PLW
 Panama,PAN
 Papua New Guinea,PNG
 Paraguay,PRY
@@ -124,18 +137,23 @@ Romania,ROU
 Russian Federation,RUS
 Rwanda,RWA
 Samoa,WSM
+San Marino,SMR
 Sao Tome and Principe,STP
 Saudi Arabia,SAU
 Senegal,SEN
 Serbia,SRB
+Seychelles,SYC
 Sierra Leone,SLE
 Singapore,SGP
 Slovak Republic,SVK
 Slovenia,SVN
+Solomon Islands,SLB
 Somalia,SOM
 South Africa,ZAF
+South Sudan,SSD
 Spain,ESP
 Sri Lanka,LKA
+St. Kitts and Nevis,KNA
 St. Lucia,LCA
 St. Vincent and the Grenadines,VCT
 Sudan,SDN
@@ -160,7 +178,9 @@ United States,USA
 Uruguay,URY
 Uzbekistan,UZB
 Vanuatu,VUT
+"Venezuela, RB",VEN
 Vietnam,VNM
 West Bank and Gaza,PSE
 "Yemen, Rep.",YEM
+Zambia,ZMB
 Zimbabwe,ZWE
