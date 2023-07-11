@@ -124,7 +124,7 @@ def create_return_for_category(data, x_values, category_code, title):
 # Function to create the return object for a histogram category chart
 
 
-def create_return_for_hist_category(data, x_values, category_code):
+def create_return_for_hist_category(data, x_values, category_code, title):
     if category_code == 'SG.LAW.INDX.EN':
         ytitle = 'Indicator'
     elif category_code == 'SE.TER.ENRR.FE':
@@ -133,7 +133,7 @@ def create_return_for_hist_category(data, x_values, category_code):
     return {
         'data': data,
         'layout': go.Layout(
-            title=binary_series_data[category_code],
+            title=title,
             xaxis={'title': 'Year'},
             yaxis=dict(
                 title=ytitle,
@@ -285,7 +285,16 @@ app.layout = html.Div([
     html.Div(style={'height': '50px'}),
     dcc.Graph(id='se_ter_enrr_fe_binary-indicator-graph'),
     html.Div(style={'height': '50px'}),
-    dcc.Graph(id='sg_law_indx_en_binary-indicator-graph'),
+    html.Div(style={'height': '50px'}),
+    html.Div([
+        html.Div([dcc.Graph(id='heatmap-lawscore')], style={'width': '25%'}),
+        html.Div([dcc.Graph(id='heatmap-entrepreneurship')],
+                 style={'width': '25%'}),
+        html.Div([dcc.Graph(id='heatmap-mobility')], style={'width': '25%'}),
+        html.Div([dcc.Graph(id='heatmap-pay')], style={'width': '25%'}),
+    ], style={'display': 'flex'}),
+    html.Div(style={'height': '50px'}),
+    dcc.Graph(id='animated-scatter-chart'),
 ])
 
 # Callback to update dropdown values based on region selection
@@ -438,6 +447,7 @@ def population_line_chart(feature, selected_countries, chart_title):
 
         return line_chart
 
+
 # Callback to update the graphs
 
 
@@ -446,14 +456,13 @@ def population_line_chart(feature, selected_countries, chart_title):
      Output('sg_get_jobs_eq_binary-indicator-graph', 'figure'),
      Output('sg_get_work_eq_binary-indicator-graph', 'figure'),
      Output('se_ter_enrr_fe_binary-indicator-graph', 'figure'),
-     Output('sg_law_indx_en_binary-indicator-graph', 'figure'),
      Output('sg_cnt_sign_eq_binary-indicator-graph', 'figure')],
     [Input('country-dropdown', 'value'),
      Input('year-slider', 'value')]
 )
 def update_graph(selected_countries, year_range):
     if not selected_countries:
-        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure()
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
     filtered_df = df[df['Country Name'].isin(selected_countries)]
     traces = []
@@ -524,12 +533,89 @@ def update_graph(selected_countries, year_range):
         create_return_for_category(sg_get_work_eq_traces, x_values, 'SG.IND.WORK.EQ',
                                    'Work in an industrial job<br>in the same way as a man'),
         create_return_for_hist_category(
-            sg_sec_enrr_fe_traces, x_values, 'SE.TER.ENRR.FE'),
-        create_return_for_hist_category(
-            sg_law_indx_en_traces, x_values, 'SG.LAW.INDX.EN'),
+            sg_sec_enrr_fe_traces, x_values, 'SE.TER.ENRR.FE', 'Gross enrollment ratio for tertiary school '),
+        # create_return_for_hist_category(
+        #     sg_law_indx_en_traces, x_values, 'SG.LAW.INDX.EN', 'Women, Business and the Law: Entrepreneurship Indicator Score'),
         create_return_for_category(sg_cnt_sign_eq_traces, x_values,
                                    'SG.CNT.SIGN.EQ', 'Sign a contract in the <br> same way as a man')
     )
+
+# Calback to draw GDP chart
+
+
+@app.callback(
+    Output('animated-scatter-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def animated_gpd(selected_countries):
+    if len(selected_countries) > 4:
+        return go.Figure()
+    else:
+        filtered_df = df_series_original[df_series_original['Country'].isin(
+            selected_countries)]
+        chart = px.scatter(filtered_df, x='GDP per capita (Current US$)', y='Life expectancy at birth, total (years)',
+                           animation_frame='Year', animation_group='Country', size="Population, total", color='Country', log_x=True, size_max=55, range_x=[100, 100000], range_y=[25, 100],
+                           labels={
+                               'x': 'GDP per capita (Current US$)', 'y': 'Life expectancy at birth, total (years)'},
+                           title='GDP vs Life Expectancy Over Time')
+
+        return chart
+
+
+@app.callback(
+    [Output('heatmap-lawscore', 'figure'),
+     Output('heatmap-entrepreneurship', 'figure'),
+     Output('heatmap-mobility', 'figure'),
+     Output('heatmap-pay', 'figure')],
+    [Input('country-dropdown', 'value')]
+)
+def update_law_index(selected_countries):
+    if len(selected_countries) > 4:
+        return go.Figure()
+    else:
+        filtered_df = df_series_original[df_series_original['Country'].isin(
+            selected_countries)]
+        filtered_df = filtered_df[filtered_df['Year'] >= 1990]
+
+        employment_features = [
+            "Women Business and the Law Index Score (scale 1-100)",
+            "Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)",
+            "Women, Business and the Law: Mobility Indicator Score (scale 1-100)",
+            "Women, Business and the Law: Pay Indicator Score (scale 1-100)"
+        ]
+
+        custom_titles = ["Index Score", 'Entrepreneurship Indicator Score', 'Mobility Indicator Score', 'Pay Indicator Score'
+
+                         ]
+
+        figures = []
+
+        for feature, title in zip(employment_features, custom_titles):
+            heatmap_df = filtered_df.pivot(
+                index='Year', columns='Country', values=feature)
+            fig = go.Figure(data=go.Heatmap(
+                z=heatmap_df.values,
+                x=heatmap_df.columns.values,
+                y=heatmap_df.index.values,
+                zmin=0,
+                zmax=100,
+                hoverongaps=False
+            ))
+
+            fig.update_layout(
+                title={
+                    'text': title,
+                    'y': 0.9,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top'},
+                title_font=dict(
+                    size=15,
+                    color='rgb(37,37,37)'),
+            )
+            figures.append(fig)
+
+        return figures
 
 
 # Run the app
