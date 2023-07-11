@@ -7,6 +7,7 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from math import ceil
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 
 def binary_categories_bar_creation(filtered_df, category_code, year_range, number_of_country, country):
@@ -73,15 +74,10 @@ def binary_categories_hist_creation(filtered_df, category_code, year_range, numb
     y_values = series_df.loc[:, f'{year_range[0]} [YR{year_range[0]}]':
                              f'{year_range[1]} [YR{year_range[1]}]'].values[0]
 
-    # convert y_values into pandas Series for the sake of convenience
     y_values = pd.Series(y_values, index=x_values)
 
-    # use interpolate method to fill the missing values
-    # the method could be 'linear', 'pad', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'polynomial', 'spline', 'barycentric', 'krogh', 'piecewise_polynomial', 'from_derivatives', 'pchip', 'akima', 'cubicspline'
     y_values = y_values.interpolate(method='linear')
 
-    # or if you prefer, you can fill it using the forward-fill method like this:
-    # y_values = y_values.fillna(method='ffill')
     name_of_graph = country
     trace = go.Scatter(
         x=x_values,
@@ -154,6 +150,27 @@ def create_return_for_hist_category(data, x_values, category_code):
                        showgrid=True,
                        ),
             hovermode='closest',
+            autosize=True,
+            margin=dict(l=50, r=50, t=150, b=50),
+            legend=dict(
+                x=0.5,
+                y=-0.5,
+                xanchor='center',
+                yanchor='top',
+                orientation='h',
+                traceorder="normal",
+                font=dict(
+                    family="sans-serif",
+                    size=12,
+                    color="black"
+                ),
+                bordercolor="Black",
+                borderwidth=2,
+                title='',
+                itemsizing='constant'
+            )
+
+
         )
     }
 
@@ -228,7 +245,12 @@ app.layout = html.Div([
         value=None
     ),
     dcc.Graph(id='animated-chart'),
-
+    html.Div([
+        dcc.Graph(id='total-population-chart', style={'width': '33%'}),
+        dcc.Graph(id='male-population-chart', style={'width': '33%'}),
+        dcc.Graph(id='female-population-chart', style={'width': '33%'}),
+    ], style={'display': 'flex'}),
+    html.Div(style={'height': '50px'}),
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -237,21 +259,23 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
+    dcc.Graph(id='indicator-graph'),
+    html.Div(style={'height': '50px'}),
     html.Div([
-        dcc.Graph(id='indicator-graph'),
+        html.H2(children='A woman can:'),
+
+        html.Div([
+            dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph',
+                      style={'width': '33%'}),
+            dcc.Graph(id='sg_get_work_eq_binary-indicator-graph',
+                      style={'width': '33%'}),
+            dcc.Graph(id='sg_cnt_sign_eq_binary-indicator-graph',
+                      style={'width': '33%'}),
+        ], style={'display': 'flex'}),
     ]),
-    html.H2(children='A woman can:'),
-
-    html.Div([
-
-        dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph',
-                  style={'width': '33%'}),
-        dcc.Graph(id='sg_get_work_eq_binary-indicator-graph',
-                  style={'width': '33%'}),
-        dcc.Graph(id='sg_cnt_sign_eq_binary-indicator-graph',
-                  style={'width': '33%'}),
-    ], style={'display': 'flex'}),
+    html.Div(style={'height': '50px'}),
     dcc.Graph(id='se_ter_enrr_fe_binary-indicator-graph'),
+    html.Div(style={'height': '50px'}),
     dcc.Graph(id='sg_law_indx_en_binary-indicator-graph'),
 
 ])
@@ -306,6 +330,94 @@ def population_chart(selected_countries):
             )
 
         return fig1
+
+
+@app.callback(
+    Output('total-population-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def total_population_chart(selected_countries):
+    return population_line_chart('Population, total', selected_countries, 'Total Population')
+
+
+@app.callback(
+    Output('male-population-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def male_population_chart(selected_countries):
+    return population_line_chart('Population, male', selected_countries, 'Male Population')
+
+
+@app.callback(
+    Output('female-population-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def female_population_chart(selected_countries):
+    return population_line_chart('Population, female', selected_countries, 'Female Population')
+
+
+def population_line_chart(feature, selected_countries, chart_title):
+    if len(selected_countries) > 4:
+        return go.Figure()
+    else:
+        filtered_df_series = df_series_original[df_series_original['Country'].isin(
+            selected_countries)]
+
+        melted_df_series = pd.melt(filtered_df_series, id_vars=['Country', 'Year'],
+                                   value_vars=[feature],
+                                   var_name='Feature', value_name='Value')
+
+        if melted_df_series.empty:
+            return go.Figure()
+
+        scaler = MinMaxScaler()
+        melted_df_series['Value'] = scaler.fit_transform(
+            melted_df_series[['Value']])
+
+        line_chart = px.line(melted_df_series,
+                             x="Year",
+                             y="Value",
+                             color="Country",
+                             labels={'Value': feature})
+
+        line_chart.update_layout(
+            title_text=chart_title,
+            xaxis=dict(title='Year',
+                       tickangle=45,
+                       showgrid=True,
+                       range=[1970, 2021],
+                       tickvals=[i for i in range(int(melted_df_series['Year'].min()), int(melted_df_series['Year'].max()) + 1, 5)]),
+            yaxis=dict(
+                overlaying='y',
+                tickangle=-90,
+                range=[0, 1],
+                showgrid=True,
+                tickvals=[0, 1],
+                ticktext=['0', '1']
+            ),
+            hovermode='x',
+            autosize=True,
+            margin=dict(l=50, r=50, t=150, b=50),
+            legend=dict(
+                x=0.5,
+                y=-0.5,
+                xanchor='center',
+                yanchor='top',
+                orientation='h',
+                traceorder="normal",
+                font=dict(
+                    family="sans-serif",
+                    size=12,
+                    color="black"
+                ),
+                bordercolor="Black",
+                borderwidth=2,
+                title='',
+                itemsizing='constant'
+            )
+        )
+
+        return line_chart
 
 
 @app.callback(
