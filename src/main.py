@@ -59,6 +59,7 @@ def binary_categories_bar_creation(filtered_df, category_code, year_range, numbe
         width=1,
         offset=bar_offset_shift
     )
+
     return binary_trace
 
 
@@ -71,19 +72,20 @@ def binary_categories_hist_creation(filtered_df, category_code, year_range, numb
     x_values = [x[0:4] for x in x_values]
     y_values = series_df.loc[:, f'{year_range[0]} [YR{year_range[0]}]':
                              f'{year_range[1]} [YR{year_range[1]}]'].values[0]
-    y_values_fixed = []
-    no_values_indexes = []
-    # existed_value =
-    for idx, y_value in enumerate(y_values):
-        if idx == 0 or np.isnan(y_value) == False:
-            existed_value = y_value
-            y_values_fixed.append(existed_value)
-        elif not y_value and y_value != 0:
-            y_values_fixed.append(existed_value)
+
+    # convert y_values into pandas Series for the sake of convenience
+    y_values = pd.Series(y_values, index=x_values)
+
+    # use interpolate method to fill the missing values
+    # the method could be 'linear', 'pad', 'nearest', 'zero', 'slinear', 'quadratic', 'cubic', 'polynomial', 'spline', 'barycentric', 'krogh', 'piecewise_polynomial', 'from_derivatives', 'pchip', 'akima', 'cubicspline'
+    y_values = y_values.interpolate(method='linear')
+
+    # or if you prefer, you can fill it using the forward-fill method like this:
+    # y_values = y_values.fillna(method='ffill')
     name_of_graph = country
     trace = go.Scatter(
         x=x_values,
-        y=y_values_fixed,
+        y=y_values,
         mode='lines',
         name=name_of_graph,
         yaxis='y1',
@@ -93,40 +95,55 @@ def binary_categories_hist_creation(filtered_df, category_code, year_range, numb
     return trace
 
 
-def create_return_for_category(data, x_values, category_code):
+def create_return_for_category(data, x_values, category_code, title):
+
     return {
         'data': data,
         'layout': go.Layout(
-            title=binary_series_data[category_code],
+            title=title,
             xaxis=dict(title='Year',
-                       tickangle=0,
+                       tickangle=45,
                        showgrid=True,
                        range=[1970, 2021],
                        tickvals=[i for i in range(int(x_values[0]), int(x_values[-1]), 5)]),
-            yaxis2=dict(title='Answer',
-                        overlaying='y',
-                        tickangle=-90,
-                        range=[0, 2],
-                        showgrid=True,
-                        tickvals=[1, 2],
-                        ticktext=['no', 'yes']
-                        ),
-            hovermode='closest'
+            yaxis2=dict(
+                overlaying='y',
+                tickangle=-90,
+                range=[0, 2],
+                showgrid=True,
+                tickvals=[1, 2],
+                ticktext=['no', 'yes']
+            ),
+            hovermode='x',
+            autosize=True,
+            margin=dict(l=50, r=50, t=150, b=50),
+            legend=dict(
+                x=0.5,
+                y=-0.5,
+                xanchor='center',
+                yanchor='top',
+                orientation='h',
+                traceorder="normal",
+                font=dict(
+                    family="sans-serif",
+                    size=12,
+                    color="black"
+                ),
+                bordercolor="Black",
+                borderwidth=2
+
+            )
         )
+
     }
 
 
 def create_return_for_hist_category(data, x_values, category_code):
+
     if category_code == 'SG.LAW.INDX.EN':
         ytitle = 'Indicator'
-        yrange = [-5, 140]
-        ytickvals = [0, 50, 100]
-        yticktext = ['0', '50', '100']
     elif category_code == 'SE.TER.ENRR.FE':
         ytitle = '% gross'
-        yrange = [-5, 140]
-        ytickvals = [0, 50, 100]
-        yticktext = ['0', '50', '100']
 
     return {
         'data': data,
@@ -134,10 +151,7 @@ def create_return_for_hist_category(data, x_values, category_code):
             title=binary_series_data[category_code],
             xaxis={'title': 'Year'},
             yaxis=dict(title=ytitle,
-                       showgrid=False,
-                       range=yrange,
-                       tickvals=ytickvals,
-                       ticktext=yticktext
+                       showgrid=True,
                        ),
             hovermode='closest',
         )
@@ -150,7 +164,6 @@ series_data = {
 
 binary_series_data = {'SG.GET.JOBS.EQ': 'A woman can get a job in the same way as a man',
                       'SG.IND.WORK.EQ': 'A woman can work in an industrial job in the same way as a man',
-                      'SG.LAW.NODC.HR': 'The law prohibits discrimination in employment based on gender',
                       'SE.TER.ENRR.FE': 'School enrollment, tertiary, female (% gross)',
                       'SG.LAW.INDX.EN': 'Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)',
                       'SG.CNT.SIGN.EQ': 'A woman can sign a contract in the same way as a man',
@@ -224,13 +237,23 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
-    dcc.Graph(id='indicator-graph'),
-    dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph'),
-    dcc.Graph(id='sg_get_work_eq_binary-indicator-graph'),
-    dcc.Graph(id='sg_law_nodc_hr_binary-indicator-graph'),
+    html.Div([
+        dcc.Graph(id='indicator-graph'),
+    ]),
+    html.H2(children='A woman can:'),
+
+    html.Div([
+
+        dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph',
+                  style={'width': '33%'}),
+        dcc.Graph(id='sg_get_work_eq_binary-indicator-graph',
+                  style={'width': '33%'}),
+        dcc.Graph(id='sg_cnt_sign_eq_binary-indicator-graph',
+                  style={'width': '33%'}),
+    ], style={'display': 'flex'}),
     dcc.Graph(id='se_ter_enrr_fe_binary-indicator-graph'),
     dcc.Graph(id='sg_law_indx_en_binary-indicator-graph'),
-    dcc.Graph(id='sg_cnt_sign_eq_binary-indicator-graph')
+
 ])
 
 
@@ -252,7 +275,7 @@ def update_dropdown_values(selected_region, available_options):
     [Input('country-dropdown', 'value')]
 )
 def population_chart(selected_countries):
-    if len(selected_countries) > 10:
+    if len(selected_countries) > 4:
         return go.Figure()
     else:
         filtered_df_series = df_series_original[df_series_original['Country'].isin(
@@ -289,7 +312,6 @@ def population_chart(selected_countries):
     [Output('indicator-graph', 'figure'),
      Output('sg_get_jobs_eq_binary-indicator-graph', 'figure'),
      Output('sg_get_work_eq_binary-indicator-graph', 'figure'),
-     Output('sg_law_nodc_hr_binary-indicator-graph', 'figure'),
      Output('se_ter_enrr_fe_binary-indicator-graph', 'figure'),
      Output('sg_law_indx_en_binary-indicator-graph', 'figure'),
      Output('sg_cnt_sign_eq_binary-indicator-graph', 'figure')],
@@ -298,13 +320,12 @@ def population_chart(selected_countries):
 )
 def update_graph(selected_countries, year_range):
     if not selected_countries:
-        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure()
+        return go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure(), go.Figure()
 
     filtered_df = df[df['Country Name'].isin(selected_countries)]
     traces = []
     sg_get_jobs_eq_traces = []
     sg_get_work_eq_traces = []
-    sg_law_nodc_hr_traces = []
     sg_sec_enrr_fe_traces = []
     sg_law_indx_en_traces = []
     sg_cnt_sign_eq_traces = []
@@ -325,7 +346,7 @@ def update_graph(selected_countries, year_range):
             if idx == 0 or np.isnan(y_value) == False:
                 existed_value = y_value
                 y_values_fixed.append(existed_value)
-            elif not y_value and y_value != 0:
+            elif np.isnan(y_value):
                 y_values_fixed.append(existed_value)
 
         y_scatter_max.append(max(y_values))
@@ -345,8 +366,6 @@ def update_graph(selected_countries, year_range):
             filtered_df, 'SG.GET.JOBS.EQ', year_range, number_of_country, country))
         sg_get_work_eq_traces.append(binary_categories_bar_creation(
             filtered_df, 'SG.IND.WORK.EQ', year_range, number_of_country, country))
-        sg_law_nodc_hr_traces.append(binary_categories_bar_creation(
-            filtered_df, 'SG.LAW.NODC.HR', year_range, number_of_country, country))
         sg_cnt_sign_eq_traces.append(binary_categories_bar_creation(
             filtered_df, 'SG.CNT.SIGN.EQ', year_range, number_of_country, country))
         sg_sec_enrr_fe_traces.append(binary_categories_hist_creation(
@@ -354,46 +373,31 @@ def update_graph(selected_countries, year_range):
         sg_law_indx_en_traces.append(binary_categories_hist_creation(
             filtered_df, 'SG.LAW.INDX.EN', year_range, number_of_country, country))
 
-    if selected_countries != 'Cameroon, Egypt, Kenya, Nigeria':
-        shift = int(round(int(max(y_scatter_max)) * 0.25, -12))
-        positive_tickvals = [i for i in range(
-            0, int(max(y_scatter_max)), shift)]
-        max_range = max(y_scatter_max) + 1000000000000
-        min_range = -max(y_scatter_max) * 0.4
-    else:
-        shift = int(round(int(max(y_scatter_max)) * 0.33, -10))
-        positive_tickvals = [i for i in range(
-            0, int(max(y_scatter_max)), shift)]
-        max_range = max(y_scatter_max) + 10000000000
-        min_range = -max(y_scatter_max) * 0.4
-
     return (
         {
             'data': traces,
             'layout': go.Layout(
-                title='<b>Prosperity of the economy depends on the participation of women<b>',
+                title='Prosperity of the economy depends on the participation of women',
                 xaxis={'title': 'Year'},
                 yaxis=dict(
                     title='GDP (current US$)',
                     showgrid=False,
-                    range=[min_range, max_range],
-                    tickvals=positive_tickvals,
+
                 ),
                 hovermode='closest',
+
             )
         },
         create_return_for_category(
-            sg_get_jobs_eq_traces, x_values, 'SG.GET.JOBS.EQ'),
+            sg_get_jobs_eq_traces, x_values, 'SG.GET.JOBS.EQ', 'Get a job in the<br>same way as a man'),
         create_return_for_category(
-            sg_get_work_eq_traces, x_values, 'SG.IND.WORK.EQ'),
-        create_return_for_category(
-            sg_law_nodc_hr_traces, x_values, 'SG.LAW.NODC.HR'),
+            sg_get_work_eq_traces, x_values, 'SG.IND.WORK.EQ', 'Work in an industrial job<br>in the same way as a man'),
         create_return_for_hist_category(
             sg_sec_enrr_fe_traces, x_values, 'SE.TER.ENRR.FE'),
         create_return_for_hist_category(
             sg_law_indx_en_traces, x_values, 'SG.LAW.INDX.EN'),
         create_return_for_category(
-            sg_cnt_sign_eq_traces, x_values, 'SG.CNT.SIGN.EQ')
+            sg_cnt_sign_eq_traces, x_values, 'SG.CNT.SIGN.EQ', 'Sign a contract in the <br> same way as a man')
     )
 
 
