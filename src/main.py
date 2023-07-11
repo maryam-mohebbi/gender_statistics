@@ -1,45 +1,32 @@
 import pandas as pd
 import plotly.express as px
-from dash import Dash
-from dash import dcc, html
-from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
+from sklearn.preprocessing import MinMaxScaler
+from dash import Dash, dcc, html
+from dash.dependencies import Input, Output, State
 from math import ceil
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+
+# Function to create a bar chart for binary categories
 
 
 def binary_categories_bar_creation(filtered_df, category_code, year_range, number_of_country, country):
     binary_series_df = filtered_df[(filtered_df['Series Code'] == category_code) & (
         filtered_df['Country Name'] == country)]
-
     x_years_all = binary_series_df.loc[:,
                                        f'{year_range[0]} [YR{year_range[0]}]':f'{year_range[1]} [YR{year_range[1]}]'].columns
     x_years_all = [int(x[0:4]) for x in x_years_all]
-    x_values = []
-    for year in x_years_all:
-        if year % 5 == 0 and str(year)[-1] == '5':
-            x_values.append(year)
-        else:
-            x_values.append(None)
+    x_values = [year if (year % 5 == 0 and str(year)[-1] ==
+                         '5') else None for year in x_years_all]
 
-    y_values_all = binary_series_df.loc[:, f'{year_range[0]} [YR{year_range[0]}]':
-                                           f'{year_range[1]} [YR{year_range[1]}]'].values[0]
-    y_values = []
-    for year, val in zip(x_years_all, y_values_all):
-        if year % 5 == 0 and str(year)[-1] == '5':
-            y_values.append(val)
-        else:
-            y_values.append(None)
-    y_values_final = []
-    for y in y_values:
-        if y == 1.0:
-            y_values_final.append(2)
-        elif y == 0.0:
-            y_values_final.append(1)
-        else:
-            y_values_final.append(0)
+    y_values_all = binary_series_df.loc[:,
+                                        f'{year_range[0]} [YR{year_range[0]}]':f'{year_range[1]} [YR{year_range[1]}]'].values[0]
+    y_values = [val if (year % 5 == 0 and str(year)[-1] == '5')
+                else None for year, val in zip(x_years_all, y_values_all)]
+
+    y_values_final = [2 if y == 1.0 else 1 if y ==
+                      0.0 else 0 for y in y_values]
 
     bar_offset_shift = None
     if number_of_country == 0:
@@ -63,19 +50,18 @@ def binary_categories_bar_creation(filtered_df, category_code, year_range, numbe
 
     return binary_trace
 
+# Function to create a histogram chart for binary categories
+
 
 def binary_categories_hist_creation(filtered_df, category_code, year_range, number_of_country, country):
     series_df = filtered_df[(filtered_df['Series Code'] == category_code) & (
         filtered_df['Country Name'] == country)]
-
-    x_values = series_df.loc[:,
-                             f'{year_range[0]} [YR{year_range[0]}]':f'{year_range[1]} [YR{year_range[1]}]'].columns
-    x_values = [x[0:4] for x in x_values]
+    x_values = [x[0:4] for x in series_df.loc[:,
+                                              f'{year_range[0]} [YR{year_range[0]}]':f'{year_range[1]} [YR{year_range[1]}]'].columns]
     y_values = series_df.loc[:, f'{year_range[0]} [YR{year_range[0]}]':
                              f'{year_range[1]} [YR{year_range[1]}]'].values[0]
 
     y_values = pd.Series(y_values, index=x_values)
-
     y_values = y_values.interpolate(method='linear')
 
     name_of_graph = country
@@ -90,18 +76,22 @@ def binary_categories_hist_creation(filtered_df, category_code, year_range, numb
     )
     return trace
 
+# Function to create the return object for a category chart
+
 
 def create_return_for_category(data, x_values, category_code, title):
-
     return {
         'data': data,
         'layout': go.Layout(
             title=title,
-            xaxis=dict(title='Year',
-                       tickangle=45,
-                       showgrid=True,
-                       range=[1970, 2021],
-                       tickvals=[i for i in range(int(x_values[0]), int(x_values[-1]), 5)]),
+            xaxis=dict(
+                title='Year',
+                tickangle=45,
+                showgrid=True,
+                range=[1970, 2021],
+                tickvals=[i for i in range(
+                    int(x_values[0]), int(x_values[-1]), 5)]
+            ),
             yaxis2=dict(
                 overlaying='y',
                 tickangle=-90,
@@ -127,15 +117,14 @@ def create_return_for_category(data, x_values, category_code, title):
                 ),
                 bordercolor="Black",
                 borderwidth=2
-
             )
         )
-
     }
+
+# Function to create the return object for a histogram category chart
 
 
 def create_return_for_hist_category(data, x_values, category_code):
-
     if category_code == 'SG.LAW.INDX.EN':
         ytitle = 'Indicator'
     elif category_code == 'SE.TER.ENRR.FE':
@@ -146,9 +135,10 @@ def create_return_for_hist_category(data, x_values, category_code):
         'layout': go.Layout(
             title=binary_series_data[category_code],
             xaxis={'title': 'Year'},
-            yaxis=dict(title=ytitle,
-                       showgrid=True,
-                       ),
+            yaxis=dict(
+                title=ytitle,
+                showgrid=True
+            ),
             hovermode='closest',
             autosize=True,
             margin=dict(l=50, r=50, t=150, b=50),
@@ -169,68 +159,82 @@ def create_return_for_hist_category(data, x_values, category_code):
                 title='',
                 itemsizing='constant'
             )
-
-
         )
     }
 
 
+# Dictionary of series data
 series_data = {
     'NY.GDP.MKTP.CD': 'GDP (current US$)'
 }
 
-binary_series_data = {'SG.GET.JOBS.EQ': 'A woman can get a job in the same way as a man',
-                      'SG.IND.WORK.EQ': 'A woman can work in an industrial job in the same way as a man',
-                      'SE.TER.ENRR.FE': 'School enrollment, tertiary, female (% gross)',
-                      'SG.LAW.INDX.EN': 'Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)',
-                      'SG.CNT.SIGN.EQ': 'A woman can sign a contract in the same way as a man',
-                      }
+# Dictionary of binary series data
+binary_series_data = {
+    'SG.GET.JOBS.EQ': 'A woman can get a job in the same way as a man',
+    'SG.IND.WORK.EQ': 'A woman can work in an industrial job in the same way as a man',
+    'SE.TER.ENRR.FE': 'School enrollment, tertiary, female (% gross)',
+    'SG.LAW.INDX.EN': 'Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)',
+    'SG.CNT.SIGN.EQ': 'A woman can sign a contract in the same way as a man'
+}
 
-country_colors = {0: '#fed98e',
-                  1: '#fe9929',
-                  2: '#d95f0e',
-                  3: '#993404'}
+# Dictionary of country colors
+country_colors = {
+    0: '#fed98e',
+    1: '#fe9929',
+    2: '#d95f0e',
+    3: '#993404'
+}
 
+# Read the data from CSV
 df = pd.read_csv('../data/cleaned_data.csv')
 
+# Select relevant columns from the dataframe
 df_series = df[['Series Name', 'Country Name'] +
                [col for col in df if col.startswith('19') or col.startswith('20')]]
 
-df_series = df_series.melt(id_vars=['Series Name', 'Country Name'],
-                           var_name='Year', value_name='Value')
+# Melt the dataframe
+df_series = df_series.melt(
+    id_vars=['Series Name', 'Country Name'], var_name='Year', value_name='Value')
 
+# Convert the 'Year' column to integer
 df_series['Year'] = df_series['Year'].str.extract('(\d+)').astype(int)
 
-df_series = df_series.pivot_table(index=['Country Name', 'Year'],
-                                  columns='Series Name', values='Value').reset_index()
+# Pivot the dataframe
+df_series = df_series.pivot_table(
+    index=['Country Name', 'Year'], columns='Series Name', values='Value').reset_index()
 
+# Rename the columns
 df_series.columns.name = ''
 df_series.rename(columns={'Country Name': 'Country'}, inplace=True)
 
+# List of group features
+group_features = [
+    'Population, total',
+    'Population, female',
+    'Population, male'
+]
 
-group_features = ['Population, total',
-                  'Population, female',
-                  'Population, male',]
-
+# Regions dictionary
 regions = {
     "Europe": ["United Kingdom", "France", "Germany", "Italy"],
     "Middle East": ["Saudi Arabia", "Iran, Islamic Rep.", "Israel", "Turkiye"],
     "Asia": ["China", "Japan", "India", "Vietnam"],
     "Africa": ["Egypt, Arab Rep.", "South Africa", "Nigeria", "Kenya"],
     "South America": ["Brazil", 'Argentina', 'Venezuela, RB', "Uruguay"],
-    "North and middle America": ['United States', 'Canada', 'Mexico', 'Panama'],
-
+    "North and middle America": ['United States', 'Canada', 'Mexico', 'Panama']
 }
+
+# List of all countries
 all_countries = df_series['Country'].unique().tolist()
 
-
+# Copy of the dataframe
 df_series_original = df_series.copy()
 
-
+# Create the Dash app
 app = Dash(__name__)
 
-
 app.layout = html.Div([
+    # Dropdown for country selection
     dcc.Dropdown(
         id='country-dropdown',
         options=[{'label': country, 'value': country}
@@ -238,19 +242,23 @@ app.layout = html.Div([
         multi=True,
         value=[]
     ),
+    # RadioItems for region selection
     dcc.RadioItems(
         id='region-radio',
         options=[{'label': region, 'value': region}
                  for region in regions.keys()],
         value=None
     ),
+    # Animated bar chart
     dcc.Graph(id='animated-chart'),
+    # Population charts
     html.Div([
         dcc.Graph(id='total-population-chart', style={'width': '33%'}),
         dcc.Graph(id='male-population-chart', style={'width': '33%'}),
         dcc.Graph(id='female-population-chart', style={'width': '33%'}),
     ], style={'display': 'flex'}),
     html.Div(style={'height': '50px'}),
+    # Year slider
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -259,11 +267,12 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
+    # Indicator graph
     dcc.Graph(id='indicator-graph'),
     html.Div(style={'height': '50px'}),
     html.Div([
+        # Binary indicator graphs
         html.H2(children='A woman can:'),
-
         html.Div([
             dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph',
                       style={'width': '33%'}),
@@ -277,8 +286,9 @@ app.layout = html.Div([
     dcc.Graph(id='se_ter_enrr_fe_binary-indicator-graph'),
     html.Div(style={'height': '50px'}),
     dcc.Graph(id='sg_law_indx_en_binary-indicator-graph'),
-
 ])
+
+# Callback to update dropdown values based on region selection
 
 
 @app.callback(
@@ -293,6 +303,8 @@ def update_dropdown_values(selected_region, available_options):
         region_countries = regions[selected_region]
         return [country['value'] for country in available_options if country['value'] in region_countries]
 
+# Callback to update the animated chart
+
 
 @app.callback(
     Output('animated-chart', 'figure'),
@@ -304,10 +316,8 @@ def population_chart(selected_countries):
     else:
         filtered_df_series = df_series_original[df_series_original['Country'].isin(
             selected_countries)]
-
-        melted_df_series = pd.melt(filtered_df_series, id_vars=['Country', 'Year'],
-                                   value_vars=group_features,
-                                   var_name='Feature', value_name='Value')
+        melted_df_series = pd.melt(filtered_df_series, id_vars=[
+                                   'Country', 'Year'], value_vars=group_features, var_name='Feature', value_name='Value')
         fig1 = px.bar(melted_df_series,
                       x="Country",
                       y='Value',
@@ -319,8 +329,8 @@ def population_chart(selected_countries):
                       barmode='group')
         fig1.update_layout(yaxis_range=[0, melted_df_series['Value'].max()])
 
-        max_pop = melted_df_series[melted_df_series['Feature'] == 'Population, total'].groupby('Country')[
-            'Value'].max()
+        max_pop = melted_df_series[melted_df_series['Feature'] ==
+                                   'Population, total'].groupby('Country')['Value'].max()
         for country in selected_countries:
             fig1.add_trace(
                 go.Scatter(x=[country], y=[max_pop[country]],
@@ -331,6 +341,8 @@ def population_chart(selected_countries):
 
         return fig1
 
+# Callback to update the total population chart
+
 
 @app.callback(
     Output('total-population-chart', 'figure'),
@@ -338,6 +350,8 @@ def population_chart(selected_countries):
 )
 def total_population_chart(selected_countries):
     return population_line_chart('Population, total', selected_countries, 'Total Population')
+
+# Callback to update the male population chart
 
 
 @app.callback(
@@ -347,6 +361,8 @@ def total_population_chart(selected_countries):
 def male_population_chart(selected_countries):
     return population_line_chart('Population, male', selected_countries, 'Male Population')
 
+# Callback to update the female population chart
+
 
 @app.callback(
     Output('female-population-chart', 'figure'),
@@ -355,6 +371,8 @@ def male_population_chart(selected_countries):
 def female_population_chart(selected_countries):
     return population_line_chart('Population, female', selected_countries, 'Female Population')
 
+# Helper function to create population line charts
+
 
 def population_line_chart(feature, selected_countries, chart_title):
     if len(selected_countries) > 4:
@@ -362,10 +380,8 @@ def population_line_chart(feature, selected_countries, chart_title):
     else:
         filtered_df_series = df_series_original[df_series_original['Country'].isin(
             selected_countries)]
-
-        melted_df_series = pd.melt(filtered_df_series, id_vars=['Country', 'Year'],
-                                   value_vars=[feature],
-                                   var_name='Feature', value_name='Value')
+        melted_df_series = pd.melt(filtered_df_series, id_vars=['Country', 'Year'], value_vars=[
+                                   feature], var_name='Feature', value_name='Value')
 
         if melted_df_series.empty:
             return go.Figure()
@@ -382,11 +398,14 @@ def population_line_chart(feature, selected_countries, chart_title):
 
         line_chart.update_layout(
             title_text=chart_title,
-            xaxis=dict(title='Year',
-                       tickangle=45,
-                       showgrid=True,
-                       range=[1970, 2021],
-                       tickvals=[i for i in range(int(melted_df_series['Year'].min()), int(melted_df_series['Year'].max()) + 1, 5)]),
+            xaxis=dict(
+                title='Year',
+                tickangle=45,
+                showgrid=True,
+                range=[1970, 2021],
+                tickvals=[i for i in range(int(melted_df_series['Year'].min()), int(
+                    melted_df_series['Year'].max()) + 1, 5)]
+            ),
             yaxis=dict(
                 overlaying='y',
                 tickangle=-90,
@@ -418,6 +437,8 @@ def population_line_chart(feature, selected_countries, chart_title):
         )
 
         return line_chart
+
+# Callback to update the graphs
 
 
 @app.callback(
@@ -493,25 +514,24 @@ def update_graph(selected_countries, year_range):
                 xaxis={'title': 'Year'},
                 yaxis=dict(
                     title='GDP (current US$)',
-                    showgrid=False,
-
+                    showgrid=False
                 ),
-                hovermode='closest',
-
+                hovermode='closest'
             )
         },
-        create_return_for_category(
-            sg_get_jobs_eq_traces, x_values, 'SG.GET.JOBS.EQ', 'Get a job in the<br>same way as a man'),
-        create_return_for_category(
-            sg_get_work_eq_traces, x_values, 'SG.IND.WORK.EQ', 'Work in an industrial job<br>in the same way as a man'),
+        create_return_for_category(sg_get_jobs_eq_traces, x_values,
+                                   'SG.GET.JOBS.EQ', 'Get a job in the<br>same way as a man'),
+        create_return_for_category(sg_get_work_eq_traces, x_values, 'SG.IND.WORK.EQ',
+                                   'Work in an industrial job<br>in the same way as a man'),
         create_return_for_hist_category(
             sg_sec_enrr_fe_traces, x_values, 'SE.TER.ENRR.FE'),
         create_return_for_hist_category(
             sg_law_indx_en_traces, x_values, 'SG.LAW.INDX.EN'),
-        create_return_for_category(
-            sg_cnt_sign_eq_traces, x_values, 'SG.CNT.SIGN.EQ', 'Sign a contract in the <br> same way as a man')
+        create_return_for_category(sg_cnt_sign_eq_traces, x_values,
+                                   'SG.CNT.SIGN.EQ', 'Sign a contract in the <br> same way as a man')
     )
 
 
+# Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
