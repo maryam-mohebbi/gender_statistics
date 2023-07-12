@@ -251,6 +251,12 @@ app.layout = html.Div([
     ),
     # Animated bar chart
     dcc.Graph(id='animated-chart'),
+    html.P(
+        "* The red circle shows the maximum values for population over the time",
+        id='paragraph',
+        style={'padding': '10px'}
+    ),
+
     # Population charts
     html.Div([
         dcc.Graph(id='total-population-chart', style={'width': '33%'}),
@@ -268,6 +274,8 @@ app.layout = html.Div([
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
     # Indicator graph
+            html.H2(children='Prosperity of the economy depends on the participation of women'),
+
     dcc.Graph(id='indicator-graph'),
     html.Div(style={'height': '50px'}),
     html.Div([
@@ -282,6 +290,13 @@ app.layout = html.Div([
                       style={'width': '33%'}),
         ], style={'display': 'flex'}),
     ]),
+    html.P(
+        ["* Women Business and the Law Index Score: The index measures how laws and regulations affect women’s economic opportunity.", 
+        html.Br(),
+        "Overall scores are calculated by taking the average score of each index (Mobility, Workplace, Pay, Marriage, Parenthood, Entrepreneurship, Assets and Pension), with 100 representing the highest possible score."],
+        id='paragraph',
+        style={'padding': '10px'}
+    ),
     html.Div(style={'height': '50px'}),
     dcc.Graph(id='se_ter_enrr_fe_binary-indicator-graph'),
     html.Div(style={'height': '50px'}),
@@ -519,7 +534,7 @@ def update_graph(selected_countries, year_range):
         {
             'data': traces,
             'layout': go.Layout(
-                title='Prosperity of the economy depends on the participation of women',
+                title='GDP Change Over Time (current US$)',
                 xaxis={'title': 'Year'},
                 yaxis=dict(
                     title='GDP (current US$)',
@@ -584,7 +599,7 @@ def update_law_index(selected_countries):
             "Women, Business and the Law: Pay Indicator Score (scale 1-100)"
         ]
 
-        custom_titles = ["Index Score", 'Entrepreneurship Indicator Score', 'Mobility Indicator Score', 'Pay Indicator Score'
+        custom_titles = ["Women Business and the Law Index Score", 'Entrepreneurship Indicator Score', 'Mobility Indicator Score', 'Pay Indicator Score'
 
                          ]
 
