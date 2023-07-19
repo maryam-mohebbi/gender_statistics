@@ -72,7 +72,7 @@ app.layout = html.Div(
     children=[
         # Birth vs Death Rate
         html.H1('Birth vs. Death Rate',
-                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'35px', 'color': '#6082B6'}
+                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'25px', 'color':'black'}
         ),
         dcc.Graph(
             id='animated-bubble-plot',
@@ -89,8 +89,7 @@ app.layout = html.Div(
                 width = 1500
             )
         ),
-        html.P('Figure 4: The scatter plot depicts the relationship between the Birth Rate and Death Rate per 1,000 population across various countries. '
-               'It offers a visual representation of population dynamics by illustrating the number of births and deaths occurring within a given year. '
+        html.P('The scatter plot depicts the relationship between the Birth Rate and Death Rate per 1,000 population across various countries. '
                'The position of each data point provides an indication of the relative balance between births and deaths, allowing for comparisons and '
                'insights into population trends.',
                style={'font-family': 'Arial, sans-serif', 'text-align':'left', 'color':'gray', 'font-size':'16px',
@@ -110,10 +109,10 @@ app.layout = html.Div(
 
         # Fertility line plot.
         html.H1('Trends in Fertility Rate', style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold',
-                                                   'font-size':'35px', 'color': '#6082B6'}), # Fertility Rate
+                                                   'font-size':'25px', 'color': 'black'}), # Fertility Rate
         dcc.Graph(id='line-plot'),
         html.P(
-            'Figure 5: The line plot showcases the fertility rates across different countries. '
+            'The line plot showcases the fertility rates across different countries. '
             'It provides insights into the number of live births occurring per 1,000 women of reproductive age (ages 15 to 49) annually.'
             'The plot allows for easy comparison and analysis of fertility patterns and trends across countries over time.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
@@ -123,13 +122,13 @@ app.layout = html.Div(
 
         # Mortality stacked graph
         html.H1('Mortality Rates by Gender and Country',
-                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'35px', 'color': '#6082B6'}
+                style={'font-family': 'Arial, sans-serif','text-align': 'left','font-weight': 'bold', 'font-size':'25px', 'color': 'black'}
         ),
         html.Div([
             dcc.Graph(id='mortality-graph'),
         ]),
         html.P(
-            'Figure 6: The stacked area graph depicts the mortality rates by gender for different countries. '
+            'The stacked area graph depicts the mortality rates by gender for different countries. '
             'It enables a visual comparison of the trends and patterns in mortality rates for adult males and females over time.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
                    'padding-left': '150px', 'padding-right': '300px', 'padding-bottom': '50px'}
@@ -138,13 +137,13 @@ app.layout = html.Div(
 
         # Infants stacked graph
         html.H1('Country-wise Infant Deaths Count: Male vs. Female',
-                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'35px', 'color': '#6082B6'}
+                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'25px', 'color': 'black'}
         ),
         html.Div([
             dcc.Graph(id='infants-graph'),
         ]),
         html.P(
-            'Figure 7: The stacked area graph showcases the count of infant deaths categorized by gender for various countries. '
+            'The stacked area graph showcases the count of infant deaths categorized by gender for various countries. '
             'It allows for a comparative analysis of the trends and patterns in infant mortality between males and females over time.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
                    'padding-left': '150px', 'padding-right': '300px', 'padding-bottom': '50px'}
@@ -153,11 +152,11 @@ app.layout = html.Div(
 
         # Immunization Heatmaps
         html.H1('Child Immunization: DPT and Measles',
-                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'35px', 'color': '#6082B6'}
+                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'25px', 'color': 'black'}
         ),
         dcc.Graph(id='immunization-heatmap-dpt'),
         html.P(
-            'Figure 8.1: The heatmap represents the percentage of children aged 12-23 months who have received DPT (Diphtheria, Pertussis, and Tetanus) vaccination. '
+            'The heatmap represents the percentage of children aged 12-23 months who have received DPT (Diphtheria, Pertussis, and Tetanus) vaccination. '
             'It provides an overview of the immunization rates for these diseases across different countries and years.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
                    'padding-left': '150px', 'padding-right': '300px'}
@@ -166,7 +165,7 @@ app.layout = html.Div(
         html.Br(),
         dcc.Graph(id='immunization-heatmap-measles'),
         html.P(
-            'Figure 8.2: This heatmap displays the percentage of children aged 12-23 months who have received measles vaccination. '
+            'The heatmap displays the percentage of children aged 12-23 months who have received measles vaccination. '
             'It illustrates the immunization rates for measles across various countries and years, offering insights into the coverage and trends in measles vaccination.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
                    'padding-left': '150px', 'padding-right': '300px', 'padding-bottom': '50px'}
@@ -175,7 +174,7 @@ app.layout = html.Div(
 
         # Survival Scatter Plot
         html.H1('Survival: Age 65+ (Male vs Female)',
-                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'35px', 'color': '#6082B6'}
+                style={'font-family': 'Arial, sans-serif','text-align': 'center','font-weight': 'bold', 'font-size':'25px', 'color': 'black'}
         ),
         dcc.Graph(
             id='animated-bubble-plot-survival',
@@ -193,7 +192,7 @@ app.layout = html.Div(
             )
         ),
         html.P(
-            'Figure 9: The scatter plot compares the survival rates of males and females aged 65 and above, providing '
+            'The scatter plot compares the survival rates of males and females aged 65 and above, providing '
             'insights into the demographic dynamics of longevity. It enables a visual comparison of male and female survival '
             'rates across different countries and years.',
             style={'font-family': 'Arial, sans-serif', 'text-align': 'left', 'color': 'gray', 'font-size': '16px',
