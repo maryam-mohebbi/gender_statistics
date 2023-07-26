@@ -69,6 +69,7 @@ app.layout = html.Div([
     dcc.Graph(id='line-chart-female'),
     dcc.Graph(id='line-chart-male'),
     dcc.Graph(id='employment-ratio-chart'),
+    dcc.Graph(id='employment-ratio-chart-heatmap'),
 ])
 
 
@@ -250,10 +251,10 @@ def update_employment_ratio_chart(selected_countries):
             x=-0.04,
             y=0.5,
             showarrow=False,
-            text="Proportions (%)",
+            text='Proportions (%)',
             textangle=-90,
-            xref="paper",
-            yref="paper"
+            xref='paper',
+            yref='paper'
         )
     )
     fig.add_annotation(
@@ -261,13 +262,69 @@ def update_employment_ratio_chart(selected_countries):
             x=0.5,
             y=-0.1,
             showarrow=False,
-            text="Year",
-            xref="paper",
-            yref="paper"
+            text='Year',
+            xref='paper',
+            yref='paper'
         )
     )
 
     return fig
+
+
+@app.callback(
+    Output('employment-ratio-chart-heatmap', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_ratio_heatmap(selected_countries):
+    if len(selected_countries) > 10:
+        return go.Figure()
+    else:
+        filtered_df = df_original[df_original['Country'].isin(
+            selected_countries)]
+        filtered_df = filtered_df[filtered_df['Year'] > 1990]
+
+        employment_features = [
+            'Employment to population ratio, 15+, female (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, male (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, total (%) (modeled ILO estimate)'
+        ]
+
+        global_min = filtered_df[employment_features].min().min()
+        global_max = filtered_df[employment_features].max().max()
+
+        custom_titles = ['Female Employment Ratio',
+                         'Male Employment Ratio', 'Total Employment Ratio']
+
+        n = len(employment_features)
+        n_cols = min(5, n)
+        n_rows = ceil(n / n_cols)
+
+        fig = make_subplots(rows=n_rows, cols=n_cols,
+                            subplot_titles=custom_titles, vertical_spacing=0.1)
+
+        for idx, (feature, title) in enumerate(zip(employment_features, custom_titles)):
+            heatmap_df = filtered_df.pivot(
+                index='Year', columns='Country', values=feature)
+
+            row = ceil((idx+1) / n_cols)
+            col = (idx+1) if (idx+1) <= n_cols else (idx +
+                                                     1) % n_cols if (idx+1) % n_cols != 0 else n_cols
+
+            fig.add_trace(
+                go.Heatmap(
+                    z=heatmap_df.values,
+                    x=heatmap_df.columns.values,
+                    y=heatmap_df.index.values,
+                    zmin=global_min,
+                    zmax=global_max,
+                    hoverongaps=False,
+                    name=title,
+                ),
+                row=row, col=col
+            )
+
+        fig.update_layout(title_text='Employment Ratio Comparison by Genders')
+        return fig
 
 
 if __name__ == '__main__':
