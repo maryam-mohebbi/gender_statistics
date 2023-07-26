@@ -161,13 +161,25 @@ def update_employment_ratio_chart(selected_countries):
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
                         subplot_titles=selected_countries, vertical_spacing=0.1)
-    min_val = filtered_df[[
-        'Employment to population ratio, 15+, total (%) (modeled ILO estimate)', 'Labor force proportion']].min().min()
-    max_val = filtered_df[[
-        'Employment to population ratio, 15+, total (%) (modeled ILO estimate)', 'Labor force proportion']].max().max()
+    
+    min_val_list = []  # List to store min values of each country
+    max_val_list = []  # List to store max values of each country
 
     for i, country in enumerate(selected_countries, start=1):
         country_df = filtered_df[filtered_df['Country'] == country]
+        
+        labor_force_employment_proportion = (
+            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
+            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
+            country_df['Population, total']
+        )
+
+        min_country = min(labor_force_employment_proportion.min(), country_df['Labor force proportion'].min())
+        max_country = max(labor_force_employment_proportion.max(), country_df['Labor force proportion'].max())
+
+        min_val_list.append(min_country)
+        max_val_list.append(max_country)
+
         row = ceil(i / n_cols)
         col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
         labor_force_employment_proportion = (
@@ -189,18 +201,23 @@ def update_employment_ratio_chart(selected_countries):
             row=row, col=col
         )
 
+    min_val = min(min_val_list)
+    max_val = max(max_val_list)
+
     fig.update_xaxes(title_text='Year')
     fig.update_yaxes(title_text='Employment Ratio (%)', secondary_y=False)
     fig.update_yaxes(title_text='Labor Force Proportion (%)', secondary_y=True)
     fig.update_yaxes(title_text='Employment Ratio (%)', range=[
-                     min_val-10, max_val+10], secondary_y=False)
+                     min_val-1, max_val+1], secondary_y=False)
     fig.update_yaxes(title_text='Labor Force Proportion (%)', range=[
-                     min_val-10, max_val+10], secondary_y=True)
+                     min_val-1, max_val+1], secondary_y=True)
 
     fig.update_layout(
         height=400*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
 
     return fig
+
+
 
 
 if __name__ == '__main__':
