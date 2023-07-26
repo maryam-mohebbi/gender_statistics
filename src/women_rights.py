@@ -9,21 +9,27 @@ from plotly.subplots import make_subplots
 from math import ceil
 
 
-df = pd.read_csv('../data/cleaned_data.csv')
+def prepare_data(file_path):
+    df = pd.read_csv(file_path)
 
-df = df[['Series Name', 'Country Name'] +
-        [col for col in df if col.startswith('19') or col.startswith('20')]]
+    df = df[['Series Name', 'Country Name'] +
+            [col for col in df if col.startswith('19') or col.startswith('20')]]
 
-df = df.melt(id_vars=['Series Name', 'Country Name'],
-             var_name='Year', value_name='Value')
+    df = df.melt(id_vars=['Series Name', 'Country Name'],
+                 var_name='Year', value_name='Value')
 
-df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
+    df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
 
-df = df.pivot_table(index=['Country Name', 'Year'],
-                    columns='Series Name', values='Value').reset_index()
+    df = df.pivot_table(index=['Country Name', 'Year'],
+                        columns='Series Name', values='Value').reset_index()
 
-df.columns.name = ''
-df.rename(columns={'Country Name': 'Country'}, inplace=True)
+    df.columns.name = ''
+    df.rename(columns={'Country Name': 'Country'}, inplace=True)
+    
+    all_countries = df['Country'].unique().tolist()
+
+    return df, all_countries
+
 
 
 group_features = ['Population, total',
@@ -31,19 +37,17 @@ group_features = ['Population, total',
                   'Population, male',]
 
 regions = {
-    "Europe": ["United Kingdom", "France", "Germany", "Italy", "Spain", "Belgium", "Netherlands", "Switzerland", "Sweden", "Poland"],
-    "Middle East": ["Saudi Arabia", "Iran, Islamic Rep.", "Israel", "Turkiye", "United Arab Emirates", "Iraq", "Lebanon", "Qatar", "Jordan", "Kuwait"],
-    "Asia": ["China", "Japan", "India", "Vietnam", "Russian Federation", "Thailand", "Indonesia", "Pakistan", "Philippines", "Malaysia"],
-    "Africa": ["Egypt, Arab Rep.", "South Africa", "Nigeria", "Kenya", "Morocco", "Ethiopia", "Tanzania", "Algeria", "Ghana", "Uganda"],
-    "South America": ["Brazil", 'Argentina', 'Venezuela, RB', "Uruguay", "Colombia", "Chile", "Peru", "Guyana", "Suriname", "Ecuador"],
-    "North and middle America": ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
+    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Belgium', 'Netherlands', 'Switzerland', 'Sweden', 'Poland'],
+    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye', 'United Arab Emirates', 'Iraq', 'Lebanon', 'Qatar', 'Jordan', 'Kuwait'],
+    'Asia': ['China', 'Japan', 'India', 'Vietnam', 'Russian Federation', 'Thailand', 'Indonesia', 'Pakistan', 'Philippines', 'Malaysia'],
+    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya', 'Morocco', 'Ethiopia', 'Tanzania', 'Algeria', 'Ghana', 'Uganda'],
+    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Uruguay', 'Colombia', 'Chile', 'Peru', 'Guyana', 'Suriname', 'Ecuador'],
+    'North and middle America': ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
 
 }
-all_countries = df['Country'].unique().tolist()
 
-
+df, all_countries = prepare_data('../data/cleaned_data.csv')
 df_original = df.copy()
-
 
 app = Dash(__name__)
 
