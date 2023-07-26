@@ -106,16 +106,32 @@ def get_standardized_population_chart(selected_countries, population_type):
         
         for i in range(len(selected_countries)):
             fig.layout.annotations[i]['text'] = selected_countries[i]
-        
-        fig.update_layout(showlegend=False)
 
-                # Set custom colors
         colors = {'Population, total': 'green', 'Population, male': 'blue', 'Population, female': 'red'}
         for trace in fig.data:
             population_type_name = trace.name
             trace.line.color = colors[population_type_name]
 
+        for axis in fig.layout:
+            if 'yaxis' in axis:
+                fig.layout[axis]['title'] = ''
+                
+        fig.add_annotation(
+            dict(
+                x=-0.04,
+                y=0.5,
+                showarrow=False,
+                text="Standardized Population Value",
+                textangle=-90,
+                xref="paper",
+                yref="paper"
+            )
+        )
+
+        fig.update_layout(showlegend=False)
+
         return fig
+
 
 
 @app.callback(
@@ -162,8 +178,8 @@ def update_employment_ratio_chart(selected_countries):
     fig = make_subplots(rows=n_rows, cols=n_cols,
                         subplot_titles=selected_countries, vertical_spacing=0.1)
     
-    min_val_list = []  # List to store min values of each country
-    max_val_list = []  # List to store max values of each country
+    min_val_list = []
+    max_val_list = []
 
     for i, country in enumerate(selected_countries, start=1):
         country_df = filtered_df[filtered_df['Country'] == country]
@@ -203,19 +219,17 @@ def update_employment_ratio_chart(selected_countries):
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
-    # Removing the redundant axis labels
     for ax in fig['layout']:
         if 'yaxis' in ax:
             fig['layout'][ax]['title'] = ''
 
-    # Adding a common y-axis label for all plots
     fig.add_annotation(
         dict(
-            x=-0.07,  # Adjust the position accordingly
-            y=0.5,    # Adjust the position accordingly
+            x=-0.04,
+            y=0.5,
             showarrow=False,
             text="Employment Ratio (%)", 
-            textangle=-90,  # So that text is vertical
+            textangle=-90,
             xref="paper",
             yref="paper"
         )
