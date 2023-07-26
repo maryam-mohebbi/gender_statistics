@@ -191,7 +191,7 @@ def update_employment_ratio_chart(selected_countries):
         filtered_df['Labor force, total'] / filtered_df['Population, total']) * 100
 
     n = len(selected_countries)
-    n_cols = 5
+    n_cols = min(5, n)
     n_rows = ceil(n / n_cols)
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
@@ -219,11 +219,6 @@ def update_employment_ratio_chart(selected_countries):
 
         row = ceil(i / n_cols)
         col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
-        labor_force_employment_proportion = (
-            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
-            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
-            country_df['Population, total']
-        )
 
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
@@ -248,7 +243,7 @@ def update_employment_ratio_chart(selected_countries):
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
     fig.update_layout(
-        height=400*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
+        height=420*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
 
     fig.add_annotation(
         dict(
