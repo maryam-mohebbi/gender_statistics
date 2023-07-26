@@ -70,6 +70,8 @@ app.layout = html.Div([
     dcc.Graph(id='line-chart-male'),
     dcc.Graph(id='employment-ratio-chart'),
     dcc.Graph(id='employment-ratio-chart-heatmap'),
+    dcc.Graph(id='employment-equality-chart'),
+    dcc.Graph(id='life-equality-chart'),
 ])
 
 
@@ -325,6 +327,101 @@ def update_employment_ratio_heatmap(selected_countries):
 
         fig.update_layout(title_text='Employment Ratio Comparison by Genders')
         return fig
+
+
+employment_features = [
+    'A woman can get a job in the same way as a man (1=yes; 0=no)',
+    'A woman can work at night in the same way as a man (1=yes; 0=no)',
+    'A woman can work in a job deemed dangerous in the same way as a man (1=yes; 0=no)',
+    'A woman can work in an industrial job in the same way as a man (1=yes; 0=no)',
+    'Dismissal of pregnant workers is prohibited (1=yes; 0=no)',
+    'Law mandates equal remuneration for females and males for work of equal value (1=yes; 0=no)',
+    'There is paid parental leave (1=yes; 0=no)',
+    'Paid leave is available to fathers (1=yes; 0=no)',
+    'Paid leave of at least 14 weeks available to mothers (1=yes; 0=no)',
+    'The age at which men and women can retire with full pension benefits is the same (1=yes; 0=no)',
+    'The age at which men and women can retire with partial pension benefits is the same (1=yes; 0=no)',
+    'The government administers 100% of maternity leave benefits (1=yes; 0=no)',
+    'The law prohibits discrimination in employment based on gender (1=yes; 0=no)',
+    'The law provides for the valuation of nonmonetary contributions (1=yes; 0=no)',
+    'The mandatory retirement age for men and women is the same (1=yes; 0=no)',
+    'There are periods of absence due to childcare accounted for in pension benefits (1=yes; 0=no)',
+    'Criminal penalties or civil remedies exist for sexual harassment in employment (1=yes; 0=no)',
+    'There is legislation on sexual harassment in employment (1=yes; 0=no)'
+]
+
+life_features = [
+    'A woman can open a bank account in the same way as a man (1=yes; 0=no)',
+    'Male and female surviving spouses have equal rights to inherit assets (1=yes; 0=no)',
+    'Men and women have equal ownership rights to immovable property (1=yes; 0=no)',
+    'The law grants spouses equal administrative authority over assets during marriage (1=yes; 0=no)',
+    'The law prohibits discrimination in access to credit based on gender (1=yes; 0=no)',
+    'A woman can apply for a passport in the same way as a man (1=yes; 0=no)',
+    'A woman can be head of household in the same way as a man (1=yes; 0=no)',
+    'A woman can choose where to live in the same way as a man (1=yes; 0=no)',
+    'A woman can obtain a judgment of divorce in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside her home in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside the country in the same way as a man (1=yes; 0=no)',
+    'A woman has the same rights to remarry as a man (1=yes; 0=no)',
+    'The law is free of legal provisions that require a married woman to obey her husband (1=yes; 0=no)',
+    'There is legislation specifically addressing domestic violence (1=yes; 0=no)',
+    'A woman can register a business in the same way as a man (1=yes; 0=no)',
+    'A woman can sign a contract in the same way as a man (1=yes; 0=no)'
+]
+
+
+# Function to calculate average score
+def calculate_average_score(df, selected_countries, features):
+    df_selected = df[df['Country'].isin(selected_countries)]
+
+    for feature in features:
+        df_selected[feature] = df_selected[feature].interpolate()
+
+    df_selected['Average Score'] = df_selected[features].mean(axis=1)
+    df_selected = df_selected[['Country', 'Year', 'Average Score']]
+
+    return df_selected
+
+
+@app.callback(
+    Output('employment-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_equality_chart(selected_countries):
+    df_score = calculate_average_score(
+        df, selected_countries, employment_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Employment Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
+
+
+@app.callback(
+    Output('life-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_life_equality_chart(selected_countries):
+    df_score = calculate_average_score(df, selected_countries, life_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Life Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
 
 
 if __name__ == '__main__':
