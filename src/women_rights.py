@@ -156,7 +156,7 @@ def update_employment_ratio_chart(selected_countries):
         filtered_df['Labor force, total'] / filtered_df['Population, total']) * 100
 
     n = len(selected_countries)
-    n_cols = 4
+    n_cols = 5
     n_rows = ceil(n / n_cols)
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
@@ -182,11 +182,6 @@ def update_employment_ratio_chart(selected_countries):
 
         row = ceil(i / n_cols)
         col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
-        labor_force_employment_proportion = (
-            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
-            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
-            country_df['Population, total']
-        )
 
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
@@ -205,17 +200,32 @@ def update_employment_ratio_chart(selected_countries):
     max_val = max(max_val_list)
 
     fig.update_xaxes(title_text='Year')
-    fig.update_yaxes(title_text='Employment Ratio (%)', secondary_y=False)
-    fig.update_yaxes(title_text='Labor Force Proportion (%)', secondary_y=True)
-    fig.update_yaxes(title_text='Employment Ratio (%)', range=[
-                     min_val-1, max_val+1], secondary_y=False)
-    fig.update_yaxes(title_text='Labor Force Proportion (%)', range=[
-                     min_val-1, max_val+1], secondary_y=True)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
+
+    # Removing the redundant axis labels
+    for ax in fig['layout']:
+        if 'yaxis' in ax:
+            fig['layout'][ax]['title'] = ''
+
+    # Adding a common y-axis label for all plots
+    fig.add_annotation(
+        dict(
+            x=-0.07,  # Adjust the position accordingly
+            y=0.5,    # Adjust the position accordingly
+            showarrow=False,
+            text="Employment Ratio (%)", 
+            textangle=-90,  # So that text is vertical
+            xref="paper",
+            yref="paper"
+        )
+    )
 
     fig.update_layout(
         height=400*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
 
     return fig
+
 
 
 
