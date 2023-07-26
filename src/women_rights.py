@@ -25,11 +25,10 @@ def prepare_data(file_path):
 
     df.columns.name = ''
     df.rename(columns={'Country Name': 'Country'}, inplace=True)
-    
+
     all_countries = df['Country'].unique().tolist()
 
     return df, all_countries
-
 
 
 group_features = ['Population, total',
@@ -72,6 +71,7 @@ app.layout = html.Div([
     dcc.Graph(id='employment-ratio-chart'),
 ])
 
+
 @app.callback(
     Output('country-dropdown', 'value'),
     [Input('region-radio', 'value')],
@@ -90,24 +90,32 @@ def get_standardized_population_chart(selected_countries, population_type):
         return go.Figure()
     else:
         column_name = f'Population, {population_type}'
-        filtered_df = df_original[df_original['Country'].isin(selected_countries)][['Year', 'Country', column_name]]
-        
+        filtered_df = df_original[df_original['Country'].isin(
+            selected_countries)][['Year', 'Country', column_name]]
+
         scaler = StandardScaler()
         for country in selected_countries:
-            filtered_df.loc[filtered_df['Country'] == country, column_name] = scaler.fit_transform(filtered_df.loc[filtered_df['Country'] == country, column_name].values.reshape(-1, 1))
-        
+            filtered_df.loc[filtered_df['Country'] == country, column_name] = scaler.fit_transform(
+                filtered_df.loc[filtered_df['Country'] == country, column_name].values.reshape(-1, 1))
+
         melted_df = pd.melt(filtered_df, id_vars=['Year', 'Country'], value_vars=[column_name],
                             var_name='Population Type', value_name='Value')
-                
-        fig = px.line(melted_df, x='Year', y='Value', color='Population Type', facet_col='Country', facet_col_wrap=5, 
+
+        fig = px.line(melted_df, x='Year', y='Value', color='Population Type', facet_col='Country', facet_col_wrap=5,
                       title=f'Standardized {population_type.capitalize()} Population Over Time')
-        
+
         fig.update_xaxes(tickangle=45)
-        
+
+        num_rows = -(-len(selected_countries) // 5)
+
         for i in range(len(selected_countries)):
             fig.layout.annotations[i]['text'] = selected_countries[i]
 
-        colors = {'Population, total': 'green', 'Population, male': 'blue', 'Population, female': 'red'}
+            if (i // 5) + 1 < num_rows:
+                fig.layout[f'xaxis{i+1}'].title.text = ''
+
+        colors = {'Population, total': 'green',
+                  'Population, male': 'blue', 'Population, female': 'red'}
         for trace in fig.data:
             population_type_name = trace.name
             trace.line.color = colors[population_type_name]
@@ -115,23 +123,33 @@ def get_standardized_population_chart(selected_countries, population_type):
         for axis in fig.layout:
             if 'yaxis' in axis:
                 fig.layout[axis]['title'] = ''
-                
+
         fig.add_annotation(
             dict(
                 x=-0.04,
                 y=0.5,
                 showarrow=False,
-                text="Standardized Population Value",
+                text='Standardized Population Value',
                 textangle=-90,
-                xref="paper",
-                yref="paper"
+                xref='paper',
+                yref='paper'
+            )
+        )
+
+        fig.add_annotation(
+            dict(
+                x=0.5,
+                y=-0.3,
+                showarrow=False,
+                text='Year',
+                xref='paper',
+                yref='paper'
             )
         )
 
         fig.update_layout(showlegend=False)
 
         return fig
-
 
 
 @app.callback(
@@ -157,6 +175,7 @@ def update_female_population_chart(selected_countries):
 def update_male_population_chart(selected_countries):
     return get_standardized_population_chart(selected_countries, 'male')
 
+
 @app.callback(
     Output('employment-ratio-chart', 'figure'),
     [Input('country-dropdown', 'value')]
@@ -177,27 +196,34 @@ def update_employment_ratio_chart(selected_countries):
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
                         subplot_titles=selected_countries, vertical_spacing=0.1)
-    
+
     min_val_list = []
     max_val_list = []
 
     for i, country in enumerate(selected_countries, start=1):
         country_df = filtered_df[filtered_df['Country'] == country]
-        
+
         labor_force_employment_proportion = (
             country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
             (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
             country_df['Population, total']
         )
 
-        min_country = min(labor_force_employment_proportion.min(), country_df['Labor force proportion'].min())
-        max_country = max(labor_force_employment_proportion.max(), country_df['Labor force proportion'].max())
+        min_country = min(labor_force_employment_proportion.min(),
+                          country_df['Labor force proportion'].min())
+        max_country = max(labor_force_employment_proportion.max(),
+                          country_df['Labor force proportion'].max())
 
         min_val_list.append(min_country)
         max_val_list.append(max_country)
 
         row = ceil(i / n_cols)
         col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
+        labor_force_employment_proportion = (
+            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
+            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
+            country_df['Population, total']
+        )
 
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
@@ -215,33 +241,38 @@ def update_employment_ratio_chart(selected_countries):
     min_val = min(min_val_list)
     max_val = max(max_val_list)
 
-    fig.update_xaxes(title_text='Year')
+    fig.update_xaxes(title_text='')
+    fig.update_yaxes(title_text='', secondary_y=False)
+    fig.update_yaxes(title_text='', secondary_y=True)
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
-    for ax in fig['layout']:
-        if 'yaxis' in ax:
-            fig['layout'][ax]['title'] = ''
+    fig.update_layout(
+        height=400*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
 
     fig.add_annotation(
         dict(
             x=-0.04,
             y=0.5,
             showarrow=False,
-            text="Employment Ratio (%)", 
+            text="Proportions (%)",
             textangle=-90,
             xref="paper",
             yref="paper"
         )
     )
-
-    fig.update_layout(
-        height=400*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.1,
+            showarrow=False,
+            text="Year",
+            xref="paper",
+            yref="paper"
+        )
+    )
 
     return fig
-
-
-
 
 
 if __name__ == '__main__':
