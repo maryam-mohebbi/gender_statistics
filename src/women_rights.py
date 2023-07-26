@@ -4,25 +4,31 @@ from dash import Dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import plotly.graph_objs as go
+from sklearn.preprocessing import StandardScaler
 from plotly.subplots import make_subplots
 from math import ceil
 
 
-df = pd.read_csv('../data/cleaned_data.csv')
+def prepare_data(file_path):
+    df = pd.read_csv(file_path)
 
-df = df[['Series Name', 'Country Name'] +
-        [col for col in df if col.startswith('19') or col.startswith('20')]]
+    df = df[['Series Name', 'Country Name'] +
+            [col for col in df if col.startswith('19') or col.startswith('20')]]
 
-df = df.melt(id_vars=['Series Name', 'Country Name'],
-             var_name='Year', value_name='Value')
+    df = df.melt(id_vars=['Series Name', 'Country Name'],
+                 var_name='Year', value_name='Value')
 
-df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
+    df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
 
-df = df.pivot_table(index=['Country Name', 'Year'],
-                    columns='Series Name', values='Value').reset_index()
+    df = df.pivot_table(index=['Country Name', 'Year'],
+                        columns='Series Name', values='Value').reset_index()
 
-df.columns.name = ''
-df.rename(columns={'Country Name': 'Country'}, inplace=True)
+    df.columns.name = ''
+    df.rename(columns={'Country Name': 'Country'}, inplace=True)
+
+    all_countries = df['Country'].unique().tolist()
+
+    return df, all_countries
 
 
 group_features = ['Population, total',
@@ -30,19 +36,17 @@ group_features = ['Population, total',
                   'Population, male',]
 
 regions = {
-    "Europe": ["United Kingdom", "France", "Germany", "Italy", "Spain", "Belgium", "Netherlands", "Switzerland", "Sweden", "Poland"],
-    "Middle East": ["Saudi Arabia", "Iran, Islamic Rep.", "Israel", "Turkiye", "United Arab Emirates", "Iraq", "Lebanon", "Qatar", "Jordan", "Kuwait"],
-    "Asia": ["China", "Japan", "India", "Vietnam", "Russian Federation", "Thailand", "Indonesia", "Pakistan", "Philippines", "Malaysia"],
-    "Africa": ["Egypt, Arab Rep.", "South Africa", "Nigeria", "Kenya", "Morocco", "Ethiopia", "Tanzania", "Algeria", "Ghana", "Uganda"],
-    "South America": ["Brazil", 'Argentina', 'Venezuela, RB', "Uruguay", "Colombia", "Chile", "Peru", "Guyana", "Suriname", "Ecuador"],
-    "North and middle America": ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
+    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Belgium', 'Netherlands', 'Switzerland', 'Sweden', 'Poland'],
+    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye', 'United Arab Emirates', 'Iraq', 'Lebanon', 'Qatar', 'Jordan', 'Kuwait'],
+    'Asia': ['China', 'Japan', 'India', 'Vietnam', 'Russian Federation', 'Thailand', 'Indonesia', 'Pakistan', 'Philippines', 'Malaysia'],
+    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya', 'Morocco', 'Ethiopia', 'Tanzania', 'Algeria', 'Ghana', 'Uganda'],
+    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Uruguay', 'Colombia', 'Chile', 'Peru', 'Guyana', 'Suriname', 'Ecuador'],
+    'North and middle America': ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
 
 }
-all_countries = df['Country'].unique().tolist()
 
-
+df, all_countries = prepare_data('../data/cleaned_data.csv')
 df_original = df.copy()
-
 
 app = Dash(__name__)
 
@@ -61,41 +65,13 @@ app.layout = html.Div([
                  for region in regions.keys()],
         value=None
     ),
-    dcc.Graph(id='animated-chart'),
-    dcc.Graph(id='boxplot-chart'),
-    dcc.Graph(id='animated-scatter-chart'),
-    html.Div([
-        html.Div([dcc.Graph(id='heatmap1')], style={'width': '33%'}),
-        html.Div([dcc.Graph(id='heatmap2')], style={'width': '33%'}),
-        html.Div([dcc.Graph(id='heatmap3')], style={'width': '33%'}),
-    ],
-        style={'display': 'flex'}),
+    dcc.Graph(id='line-chart-total'),
+    dcc.Graph(id='line-chart-female'),
+    dcc.Graph(id='line-chart-male'),
     dcc.Graph(id='employment-ratio-chart'),
-    html.Div([
-        html.Div([
-            html.Div([dcc.Graph(id='heatmap11')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap12')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap13')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap14')], style={'width': '25%'}),
-        ], style={'display': 'flex'}),
-
-        html.Div([
-            html.Div([dcc.Graph(id='heatmap15')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap16')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap17')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap18')], style={'width': '25%'}),
-        ], style={'display': 'flex'}),
-
-        html.Div([
-            html.Div([dcc.Graph(id='heatmap19')], style={'width': '25%'}),
-            html.Div([dcc.Graph(id='heatmap20')], style={'width': '25%'}),
-
-        ], style={'display': 'flex'}),
-        dcc.Graph(id='animated-scatter-chart2'),
-        dcc.Graph(id='line-chart'),
-    ])
-
-
+    dcc.Graph(id='employment-ratio-chart-heatmap'),
+    dcc.Graph(id='employment-equality-chart'),
+    dcc.Graph(id='life-equality-chart'),
 ])
 
 
@@ -112,107 +88,95 @@ def update_dropdown_values(selected_region, available_options):
         return [country['value'] for country in available_options if country['value'] in region_countries]
 
 
-@app.callback(
-    [Output('animated-chart', 'figure'),
-     Output('boxplot-chart', 'figure'),
-     Output('animated-scatter-chart', 'figure')],
-    [Input('country-dropdown', 'value')]
-)
-def update_chart(selected_countries):
-    if len(selected_countries) > 10:
-        return go.Figure(), go.Figure()
-    else:
-        filtered_df = df_original[df_original['Country'].isin(
-            selected_countries)]
-
-        melted_df = pd.melt(filtered_df, id_vars=['Country', 'Year'],
-                            value_vars=group_features,
-                            var_name='Feature', value_name='Value')
-        fig1 = px.bar(melted_df,
-                      x="Country",
-                      y='Value',
-                      color="Feature",
-                      animation_frame="Year",
-                      animation_group="Country",
-                      labels={'Value': 'Population'},
-                      title='Population Change Over Time',
-                      barmode='group')
-        fig1.update_layout(yaxis_range=[0, melted_df['Value'].max()])
-
-        max_pop = melted_df[melted_df['Feature'] == 'Population, total'].groupby('Country')[
-            'Value'].max()
-        for country in selected_countries:
-            fig1.add_trace(
-                go.Scatter(x=[country], y=[max_pop[country]],
-                           mode='markers',
-                           marker=dict(size=10, color='Red'),
-                           showlegend=False)
-            )
-
-        fig2 = px.box(filtered_df, x="Country", y=group_features)
-
-        fig3 = px.scatter(filtered_df, x='GDP per capita (Current US$)', y='Life expectancy at birth, total (years)',
-                          animation_frame='Year', animation_group='Country', size="Population, total", color='Country', log_x=True, size_max=55, range_x=[100, 100000], range_y=[25, 100],
-                          labels={
-                              'x': 'GDP per capita (Current US$)', 'y': 'Life expectancy at birth, total (years)'},
-                          title='GDP vs Life Expectancy Over Time')
-
-        return fig1, fig2, fig3
-
-
-@app.callback(
-    [Output('heatmap1', 'figure'),
-     Output('heatmap2', 'figure'),
-     Output('heatmap3', 'figure')],
-    [Input('country-dropdown', 'value')]
-)
-def update_heatmap(selected_countries):
+def get_standardized_population_chart(selected_countries, population_type):
     if len(selected_countries) > 10:
         return go.Figure()
     else:
+        column_name = f'Population, {population_type}'
         filtered_df = df_original[df_original['Country'].isin(
-            selected_countries)]
-        filtered_df = filtered_df[filtered_df['Year'] >= 1990]
+            selected_countries)][['Year', 'Country', column_name]]
 
-        employment_features = [
-            "Employment to population ratio, 15+, female (%) (modeled ILO estimate)",
-            "Employment to population ratio, 15+, male (%) (modeled ILO estimate)",
-            "Employment to population ratio, 15+, total (%) (modeled ILO estimate)"
-        ]
+        scaler = StandardScaler()
+        for country in selected_countries:
+            filtered_df.loc[filtered_df['Country'] == country, column_name] = scaler.fit_transform(
+                filtered_df.loc[filtered_df['Country'] == country, column_name].values.reshape(-1, 1))
 
-        global_min = filtered_df[employment_features].min().min()
-        global_max = filtered_df[employment_features].max().max()
+        melted_df = pd.melt(filtered_df, id_vars=['Year', 'Country'], value_vars=[column_name],
+                            var_name='Population Type', value_name='Value')
 
-        custom_titles = ["Female Employment Ratio",
-                         "Male Employment Ratio", "Total Employment Ratio"]
+        fig = px.line(melted_df, x='Year', y='Value', color='Population Type', facet_col='Country', facet_col_wrap=5,
+                      title=f'Standardized {population_type.capitalize()} Population Over Time')
 
-        figures = []
+        fig.update_xaxes(tickangle=45)
 
-        for feature, title in zip(employment_features, custom_titles):
-            heatmap_df = filtered_df.pivot(
-                index='Year', columns='Country', values=feature)
-            fig = go.Figure(data=go.Heatmap(
-                z=heatmap_df.values,
-                x=heatmap_df.columns.values,
-                y=heatmap_df.index.values,
-                zmin=global_min,
-                zmax=global_max,
-                hoverongaps=False))
+        num_rows = -(-len(selected_countries) // 5)
 
-            fig.update_layout(
-                title={
-                    'text': title,
-                    'y': 0.9,
-                    'x': 0.5,
-                    'xanchor': 'center',
-                    'yanchor': 'top'},
-                title_font=dict(
-                    size=15,
-                    color='rgb(37,37,37)'),
+        for i in range(len(selected_countries)):
+            fig.layout.annotations[i]['text'] = selected_countries[i]
+
+            if (i // 5) + 1 < num_rows:
+                fig.layout[f'xaxis{i+1}'].title.text = ''
+
+        colors = {'Population, total': 'green',
+                  'Population, male': 'blue', 'Population, female': 'red'}
+        for trace in fig.data:
+            population_type_name = trace.name
+            trace.line.color = colors[population_type_name]
+
+        for axis in fig.layout:
+            if 'yaxis' in axis:
+                fig.layout[axis]['title'] = ''
+
+        fig.add_annotation(
+            dict(
+                x=-0.04,
+                y=0.5,
+                showarrow=False,
+                text='Standardized Population Value',
+                textangle=-90,
+                xref='paper',
+                yref='paper'
             )
-            figures.append(fig)
+        )
 
-        return figures
+        fig.add_annotation(
+            dict(
+                x=0.5,
+                y=-0.3,
+                showarrow=False,
+                text='Year',
+                xref='paper',
+                yref='paper'
+            )
+        )
+
+        fig.update_layout(showlegend=False)
+
+        return fig
+
+
+@app.callback(
+    Output('line-chart-total', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_total_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'total')
+
+
+@app.callback(
+    Output('line-chart-female', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_female_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'female')
+
+
+@app.callback(
+    Output('line-chart-male', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_male_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'male')
 
 
 @app.callback(
@@ -230,178 +194,234 @@ def update_employment_ratio_chart(selected_countries):
         filtered_df['Labor force, total'] / filtered_df['Population, total']) * 100
 
     n = len(selected_countries)
-    n_cols = 4
+    n_cols = min(5, n)
     n_rows = ceil(n / n_cols)
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
                         subplot_titles=selected_countries, vertical_spacing=0.1)
-    min_val = filtered_df[[
-        'Employment to population ratio, 15+, total (%) (modeled ILO estimate)', 'Labor force proportion']].min().min()
-    max_val = filtered_df[[
-        'Employment to population ratio, 15+, total (%) (modeled ILO estimate)', 'Labor force proportion']].max().max()
+
+    min_val_list = []
+    max_val_list = []
 
     for i, country in enumerate(selected_countries, start=1):
         country_df = filtered_df[filtered_df['Country'] == country]
-        row = ceil(i / n_cols)
-        col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
+
         labor_force_employment_proportion = (
             country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
             (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
             country_df['Population, total']
         )
 
+        min_country = min(labor_force_employment_proportion.min(),
+                          country_df['Labor force proportion'].min())
+        max_country = max(labor_force_employment_proportion.max(),
+                          country_df['Labor force proportion'].max())
+
+        min_val_list.append(min_country)
+        max_val_list.append(max_country)
+
+        row = ceil(i / n_cols)
+        col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
+
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
                        name=f'Employment Ratio', legendgroup=country, hovertemplate='Year=%{x}<br>Employment Ratio=%{y}',
-                       line=dict(color='red')),  # setting line color to red
+                       line=dict(color='red')),
             row=row, col=col
         )
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=country_df['Labor force proportion'],
                        name=f'Labor Force Proportion', legendgroup=country, hovertemplate='Year=%{x}<br>Labor Force Proportion=%{y}',
-                       line=dict(color='blue')),  # setting line color to blue
+                       line=dict(color='blue')),
             row=row, col=col
         )
 
-    fig.update_xaxes(title_text="Year")
-    fig.update_yaxes(title_text="Employment Ratio (%)", secondary_y=False)
-    fig.update_yaxes(title_text="Labor Force Proportion (%)", secondary_y=True)
-    fig.update_yaxes(title_text="Employment Ratio (%)", range=[
-                     min_val-1, max_val+1], secondary_y=False)
-    fig.update_yaxes(title_text="Labor Force Proportion (%)", range=[
-                     min_val-1, max_val+1], secondary_y=True)
+    min_val = min(min_val_list)
+    max_val = max(max_val_list)
+
+    fig.update_xaxes(title_text='')
+    fig.update_yaxes(title_text='', secondary_y=False)
+    fig.update_yaxes(title_text='', secondary_y=True)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
     fig.update_layout(
-        height=400*n_rows, title_text="Comparison between Employment Ratio and Labor Force Proportion", showlegend=False)
+        height=420*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
+
+    fig.add_annotation(
+        dict(
+            x=-0.04,
+            y=0.5,
+            showarrow=False,
+            text='Proportions (%)',
+            textangle=-90,
+            xref='paper',
+            yref='paper'
+        )
+    )
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.1,
+            showarrow=False,
+            text='Year',
+            xref='paper',
+            yref='paper'
+        )
+    )
 
     return fig
 
 
 @app.callback(
-    [Output('heatmap11', 'figure'),
-     Output('heatmap12', 'figure'),
-     Output('heatmap13', 'figure'),
-     Output('heatmap14', 'figure'),
-     Output('heatmap15', 'figure'),
-     Output('heatmap16', 'figure'),
-     Output('heatmap17', 'figure'),
-     Output('heatmap18', 'figure'),
-     Output('heatmap19', 'figure'),
-     Output('heatmap20', 'figure')],
+    Output('employment-ratio-chart-heatmap', 'figure'),
     [Input('country-dropdown', 'value')]
 )
-def update_heatmap(selected_countries):
+def update_employment_ratio_heatmap(selected_countries):
     if len(selected_countries) > 10:
         return go.Figure()
     else:
         filtered_df = df_original[df_original['Country'].isin(
             selected_countries)]
-        filtered_df = filtered_df[filtered_df['Year'] >= 1990]
+        filtered_df = filtered_df[filtered_df['Year'] > 1990]
 
         employment_features = [
-            "A woman can get a job in the same way as a man (1=yes; 0=no)",
-            "A woman can work in a job deemed dangerous in the same way as a man (1=yes; 0=no)",
-            "A woman can work in an industrial job in the same way as a man (1=yes; 0=no)",
-            "A woman can work in an industrial job in the same way as a man (1=yes; 0=no)",
-            "Dismissal of pregnant workers is prohibited (1=yes; 0=no)",
-            "A woman can travel outside her home in the same way as a man (1=yes; 0=no)",
-            "A woman can travel outside the country in the same way as a man (1=yes; 0=no)",
-            "A woman has the same rights to remarry as a man (1=yes; 0=no)",
-            "A woman can register a business in the same way as a man (1=yes; 0=no)",
-            "A woman can sign a contract in the same way as a man (1=yes; 0=no)"
+            'Employment to population ratio, 15+, female (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, male (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, total (%) (modeled ILO estimate)'
         ]
-
-        custom_titles = ["get a job in the same way as a man",
-                         "work in a job deemed dangerous in the same way as a man",
-                         "work in an industrial job in the same way as a man",
-                         "work in an industrial job in the same way as a man",
-                         "Dismissal of pregnant workers is prohibited",
-                         "A woman can travel outside her home in the same way as a man",
-                         "A woman can travel outside the country in the same way as a man",
-                         "A woman has the same rights to remarry as a man",
-                         "A woman can register a business in the same way as a man",
-                         "A woman can sign a contract in the same way as a man"]
 
         global_min = filtered_df[employment_features].min().min()
         global_max = filtered_df[employment_features].max().max()
 
-        figures = []
+        custom_titles = ['Female Employment Ratio',
+                         'Male Employment Ratio', 'Total Employment Ratio']
 
-        for feature, title in zip(employment_features, custom_titles):
+        n = len(employment_features)
+        n_cols = min(5, n)
+        n_rows = ceil(n / n_cols)
+
+        fig = make_subplots(rows=n_rows, cols=n_cols,
+                            subplot_titles=custom_titles, vertical_spacing=0.1)
+
+        for idx, (feature, title) in enumerate(zip(employment_features, custom_titles)):
             heatmap_df = filtered_df.pivot(
                 index='Year', columns='Country', values=feature)
-            fig = go.Figure(data=go.Heatmap(
-                z=heatmap_df.values,
-                x=heatmap_df.columns.values,
-                y=heatmap_df.index.values,
-                zmin=0,
-                zmax=1,
-                colorscale=[[0, 'orange'], [1, 'blue']],
-                colorbar=dict(
-                    tickvals=[0, 1],
-                    ticktext=['No', 'Yes'],
-                    ticks='outside'
+
+            row = ceil((idx+1) / n_cols)
+            col = (idx+1) if (idx+1) <= n_cols else (idx +
+                                                     1) % n_cols if (idx+1) % n_cols != 0 else n_cols
+
+            fig.add_trace(
+                go.Heatmap(
+                    z=heatmap_df.values,
+                    x=heatmap_df.columns.values,
+                    y=heatmap_df.index.values,
+                    zmin=global_min,
+                    zmax=global_max,
+                    hoverongaps=False,
+                    name=title,
                 ),
-                hoverongaps=False
-            ))
-
-            fig.update_layout(
-                title={
-                    'text': title,
-                    'y': 0.9,
-                    'x': 0.5,
-                    'xanchor': 'center',
-                    'yanchor': 'top'},
-                title_font=dict(
-                    size=15,
-                    color='rgb(37,37,37)'),
+                row=row, col=col
             )
-            figures.append(fig)
 
-        return figures
-
-
-@app.callback(
-    [Output('animated-scatter-chart2', 'figure')],
-    [Input('country-dropdown', 'value')]
-)
-def update_chart(selected_countries):
-    if len(selected_countries) > 10:
-        return [go.Figure()]
-    else:
-        filtered_df = df_original[df_original['Country'].isin(
-            selected_countries)]
-
-        print(filtered_df[['Country', 'Year', 'GDP per capita (Current US$)',
-              'Women Business and the Law Index Score (scale 1-100)', 'Population ages 15-64, female']].head())
-
-        fig3 = px.scatter(filtered_df,
-                          x='GDP per capita (Current US$)',
-                          y='Women Business and the Law Index Score (scale 1-100)',
-                          size='Population ages 15-64, female',
-                          animation_frame='Year',
-                          animation_group='Country',
-                          color='Country',
-                          log_x=True,
-                          size_max=55,
-                          range_x=[100, 100000],
-                          range_y=[0, 100])
-        return [fig3]
-
-
-@app.callback(
-    Output('line-chart', 'figure'),
-    [Input('country-dropdown', 'value')]
-)
-def update_line_chart(selected_countries):
-    if len(selected_countries) > 10:
-        return go.Figure()
-    else:
-        filtered_df = df_original[df_original['Country'].isin(
-            selected_countries)]
-        fig = px.line(filtered_df, x="Year", y="Women Business and the Law Index Score (scale 1-100)", color='Country',
-                      title='Women Business and the Law Index Score Over Time', range_y=[0, 100])
+        fig.update_layout(title_text='Employment Ratio Comparison by Genders')
         return fig
+
+
+employment_features = [
+    'A woman can get a job in the same way as a man (1=yes; 0=no)',
+    'A woman can work at night in the same way as a man (1=yes; 0=no)',
+    'A woman can work in a job deemed dangerous in the same way as a man (1=yes; 0=no)',
+    'A woman can work in an industrial job in the same way as a man (1=yes; 0=no)',
+    'Dismissal of pregnant workers is prohibited (1=yes; 0=no)',
+    'Law mandates equal remuneration for females and males for work of equal value (1=yes; 0=no)',
+    'There is paid parental leave (1=yes; 0=no)',
+    'Paid leave is available to fathers (1=yes; 0=no)',
+    'Paid leave of at least 14 weeks available to mothers (1=yes; 0=no)',
+    'The age at which men and women can retire with full pension benefits is the same (1=yes; 0=no)',
+    'The age at which men and women can retire with partial pension benefits is the same (1=yes; 0=no)',
+    'The government administers 100% of maternity leave benefits (1=yes; 0=no)',
+    'The law prohibits discrimination in employment based on gender (1=yes; 0=no)',
+    'The law provides for the valuation of nonmonetary contributions (1=yes; 0=no)',
+    'The mandatory retirement age for men and women is the same (1=yes; 0=no)',
+    'There are periods of absence due to childcare accounted for in pension benefits (1=yes; 0=no)',
+    'Criminal penalties or civil remedies exist for sexual harassment in employment (1=yes; 0=no)',
+    'There is legislation on sexual harassment in employment (1=yes; 0=no)'
+]
+
+life_features = [
+    'A woman can open a bank account in the same way as a man (1=yes; 0=no)',
+    'Male and female surviving spouses have equal rights to inherit assets (1=yes; 0=no)',
+    'Men and women have equal ownership rights to immovable property (1=yes; 0=no)',
+    'The law grants spouses equal administrative authority over assets during marriage (1=yes; 0=no)',
+    'The law prohibits discrimination in access to credit based on gender (1=yes; 0=no)',
+    'A woman can apply for a passport in the same way as a man (1=yes; 0=no)',
+    'A woman can be head of household in the same way as a man (1=yes; 0=no)',
+    'A woman can choose where to live in the same way as a man (1=yes; 0=no)',
+    'A woman can obtain a judgment of divorce in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside her home in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside the country in the same way as a man (1=yes; 0=no)',
+    'A woman has the same rights to remarry as a man (1=yes; 0=no)',
+    'The law is free of legal provisions that require a married woman to obey her husband (1=yes; 0=no)',
+    'There is legislation specifically addressing domestic violence (1=yes; 0=no)',
+    'A woman can register a business in the same way as a man (1=yes; 0=no)',
+    'A woman can sign a contract in the same way as a man (1=yes; 0=no)'
+]
+
+
+# Function to calculate average score
+def calculate_average_score(df, selected_countries, features):
+    df_selected = df[df['Country'].isin(selected_countries)]
+
+    for feature in features:
+        df_selected[feature] = df_selected[feature].interpolate()
+
+    df_selected['Average Score'] = df_selected[features].mean(axis=1)
+    df_selected = df_selected[['Country', 'Year', 'Average Score']]
+
+    return df_selected
+
+
+@app.callback(
+    Output('employment-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_equality_chart(selected_countries):
+    df_score = calculate_average_score(
+        df, selected_countries, employment_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Employment Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
+
+
+@app.callback(
+    Output('life-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_life_equality_chart(selected_countries):
+    df_score = calculate_average_score(df, selected_countries, life_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Life Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
 
 
 if __name__ == '__main__':
