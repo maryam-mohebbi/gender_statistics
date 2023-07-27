@@ -144,3 +144,20 @@ app.layout = html.Div([
 
 ])
 ```
+
+## Dynamic Country Dropdown Selection Based on Region
+This part of the report defines a callback function using the Dash framework to update the values displayed in the country dropdown menu based on the selected region. When a user selects a region using the radio buttons, the country dropdown will dynamically update to show only the countries belonging to the selected region, providing a streamlined and relevant user experience for data exploration.
+
+```
+@app.callback(
+    Output('country-dropdown', 'value'),
+    [Input('region-radio', 'value')],
+    [State('country-dropdown', 'options')]
+)
+def update_dropdown_values(selected_region, available_options):
+    if selected_region is None:
+        return []
+    else:
+        region_countries = regions[selected_region]
+        return [country['value'] for country in available_options if country['value'] in region_countries]
+```
