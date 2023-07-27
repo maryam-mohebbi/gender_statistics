@@ -42,3 +42,60 @@ Within each of these regions, we selected ten countries to analyze in detail. Th
 
 With the groundwork set, we are now ready to delve into the fascinating world of gender equality and women's rights. Let's explore the data and discover insights that shed light on the progress and challenges faced by women in different parts of the world. The subsequent sections will present a detailed analysis of each region and country, accompanied by visualizations to enhance the overall understanding of the subject matter.
 
+### Data Import and Preparation 
+```
+from geopy.geocoders import Nominatim
+import pandas as pd
+import plotly.express as px
+from dash import Dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
+from sklearn.preprocessing import StandardScaler
+from plotly.subplots import make_subplots
+from math import ceil
+import geopandas as gpd
+
+
+geolocator = Nominatim(user_agent='geoapiExercises')
+
+
+def prepare_data(file_path):
+    df = pd.read_csv(file_path)
+
+    df = df[['Series Name', 'Country Name', 'Country Code'] +
+            [col for col in df if col.startswith('19') or col.startswith('20')]]
+
+    df = df.melt(id_vars=['Series Name', 'Country Name', 'Country Code'],
+                 var_name='Year', value_name='Value')
+
+    df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
+
+    df = df.pivot_table(index=['Country Name', 'Year', 'Country Code'],
+                        columns='Series Name', values='Value').reset_index()
+
+    df.columns.name = ''
+    df.rename(columns={'Country Name': 'Country'}, inplace=True)
+
+    all_countries = df['Country'].unique().tolist()
+    return df, all_countries
+
+
+group_features = ['Population, total',
+                  'Population, female',
+                  'Population, male',]
+
+regions = {
+    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Belgium', 'Netherlands', 'Switzerland', 'Sweden', 'Poland'],
+    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye', 'United Arab Emirates', 'Iraq', 'Lebanon', 'Qatar', 'Jordan', 'Kuwait'],
+    'Asia': ['China', 'Japan', 'India', 'Vietnam', 'Russian Federation', 'Thailand', 'Indonesia', 'Pakistan', 'Philippines', 'Malaysia'],
+    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya', 'Morocco', 'Ethiopia', 'Tanzania', 'Algeria', 'Ghana', 'Uganda'],
+    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Uruguay', 'Colombia', 'Chile', 'Peru', 'Guyana', 'Suriname', 'Ecuador'],
+    'North and middle America': ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
+
+}
+
+df, all_countries = prepare_data('../../data/cleaned_data.csv')
+df_original = df.copy()
+```
+
