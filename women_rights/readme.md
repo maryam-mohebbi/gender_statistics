@@ -99,3 +99,48 @@ df, all_countries = prepare_data('../../data/cleaned_data.csv')
 df_original = df.copy()
 ```
 
+### Import App layout and Set Order of Charts
+```
+app = Dash(__name__)
+
+
+app.layout = html.Div([
+    dcc.Dropdown(
+        id='country-dropdown',
+        options=[{'label': country, 'value': country}
+                 for country in all_countries],
+        multi=True,
+        value=[]
+    ),
+    dcc.RadioItems(
+        id='region-radio',
+        options=[{'label': region, 'value': region}
+                 for region in regions.keys()],
+        value=None
+    ),
+    dcc.Graph(id='line-chart-total'),
+    dcc.Graph(id='line-chart-female'),
+    dcc.Graph(id='line-chart-male'),
+    dcc.Graph(id='employment-ratio-chart'),
+    dcc.Graph(id='employment-ratio-chart-heatmap'),
+    dcc.Graph(id='employment-equality-chart'),
+    dcc.Graph(id='life-equality-chart'),
+    html.Label('Select Year:'),
+    dcc.RadioItems(
+        id='year-radio',
+        options=[{'label': str(i), 'value': i}
+                 for i in [1970, 1980, 1990, 2000, 2010, 2020]],
+        value=2020,
+        labelStyle={'display': 'inline-block'}
+    ),
+    html.Div(
+        dcc.Graph(id='world-map'),
+        style={
+            'display': 'flex',
+            'justify-content': 'center',
+            'width': '100%'
+        }
+    ),
+
+])
+```
