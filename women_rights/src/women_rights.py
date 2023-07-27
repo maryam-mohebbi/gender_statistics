@@ -49,7 +49,7 @@ regions = {
 
 }
 
-df, all_countries = prepare_data('../data/cleaned_data.csv')
+df, all_countries = prepare_data('../../data/cleaned_data.csv')
 df_original = df.copy()
 
 app = Dash(__name__)
@@ -224,6 +224,22 @@ def update_employment_ratio_chart(selected_countries):
     min_val_list = []
     max_val_list = []
 
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None], 
+                   mode='lines', 
+                   name='Employment Ratio', 
+                   line=dict(color='red'), 
+                   showlegend=True)
+    )
+
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None], 
+                   mode='lines', 
+                   name='Labor Force Proportion', 
+                   line=dict(color='blue'), 
+                   showlegend=True)
+    )
+
     for i, country in enumerate(selected_countries, start=1):
         country_df = filtered_df[filtered_df['Country'] == country]
 
@@ -246,14 +262,14 @@ def update_employment_ratio_chart(selected_countries):
 
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
-                       name=f'Employment Ratio', legendgroup=country, hovertemplate='Year=%{x}<br>Employment Ratio=%{y}',
-                       line=dict(color='red')),
+                       name=f'Employment Ratio', hovertemplate='Year=%{x}<br>Employment Ratio=%{y}',
+                       line=dict(color='red'), showlegend=False),
             row=row, col=col
         )
         fig.add_trace(
             go.Scatter(x=country_df['Year'], y=country_df['Labor force proportion'],
-                       name=f'Labor Force Proportion', legendgroup=country, hovertemplate='Year=%{x}<br>Labor Force Proportion=%{y}',
-                       line=dict(color='blue')),
+                       name=f'Labor Force Proportion', hovertemplate='Year=%{x}<br>Labor Force Proportion=%{y}',
+                       line=dict(color='blue'), showlegend=False),
             row=row, col=col
         )
 
@@ -267,7 +283,17 @@ def update_employment_ratio_chart(selected_countries):
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
     fig.update_layout(
-        height=420*n_rows, title_text='Comparison between Employment Ratio and Labor Force Proportion', showlegend=False)
+    height=420*n_rows, 
+    title_text='Comparison between Employment Ratio and Labor Force Proportion', 
+    showlegend=True,
+    legend=dict(
+        yanchor="bottom",
+        y=-0.2,
+        xanchor="center",
+        x=0.5
+    )
+)
+
 
     fig.add_annotation(
         dict(
@@ -292,6 +318,7 @@ def update_employment_ratio_chart(selected_countries):
     )
 
     return fig
+
 
 
 @app.callback(
