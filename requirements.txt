@@ -9,3 +9,6 @@ sklearn
 scikit-learn
 dash-bootstrap-components
 pycountry_convert
+iso3166
+geopy
+geopandas
