@@ -1,3 +1,4 @@
+from geopy.geocoders import Nominatim
 import pandas as pd
 import plotly.express as px
 from dash import Dash
@@ -7,27 +8,30 @@ import plotly.graph_objs as go
 from sklearn.preprocessing import StandardScaler
 from plotly.subplots import make_subplots
 from math import ceil
+import geopandas as gpd
+
+
+geolocator = Nominatim(user_agent='geoapiExercises')
 
 
 def prepare_data(file_path):
     df = pd.read_csv(file_path)
 
-    df = df[['Series Name', 'Country Name'] +
+    df = df[['Series Name', 'Country Name', 'Country Code'] +
             [col for col in df if col.startswith('19') or col.startswith('20')]]
 
-    df = df.melt(id_vars=['Series Name', 'Country Name'],
+    df = df.melt(id_vars=['Series Name', 'Country Name', 'Country Code'],
                  var_name='Year', value_name='Value')
 
     df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
 
-    df = df.pivot_table(index=['Country Name', 'Year'],
+    df = df.pivot_table(index=['Country Name', 'Year', 'Country Code'],
                         columns='Series Name', values='Value').reset_index()
 
     df.columns.name = ''
     df.rename(columns={'Country Name': 'Country'}, inplace=True)
 
     all_countries = df['Country'].unique().tolist()
-
     return df, all_countries
 
 
@@ -72,6 +76,23 @@ app.layout = html.Div([
     dcc.Graph(id='employment-ratio-chart-heatmap'),
     dcc.Graph(id='employment-equality-chart'),
     dcc.Graph(id='life-equality-chart'),
+    html.Label('Select Year:'),
+    dcc.RadioItems(
+        id='year-radio',
+        options=[{'label': str(i), 'value': i}
+                 for i in [1970, 1980, 1990, 2000, 2010, 2020]],
+        value=2020,
+        labelStyle={'display': 'inline-block'}
+    ),
+    html.Div(
+        dcc.Graph(id='world-map'),
+        style={
+            'display': 'flex',
+            'justify-content': 'center',
+            'width': '100%'
+        }
+    ),
+
 ])
 
 
@@ -370,7 +391,6 @@ life_features = [
 ]
 
 
-# Function to calculate average score
 def calculate_average_score(df, selected_countries, features):
     df_selected = df[df['Country'].isin(selected_countries)]
 
@@ -422,6 +442,83 @@ def update_life_equality_chart(selected_countries):
     fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
 
     return fig
+
+
+world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+
+def geolocate(country):
+    try:
+        geometry = world[world['name'] == country]['geometry'].values[0]
+        bounds = geometry.bounds
+        return bounds
+    except (IndexError, AttributeError):
+        print(f'Cannot find {country}')
+        return None
+
+
+@app.callback(
+    Output('world-map', 'figure'),
+    [Input('country-dropdown', 'value'),
+     Input('year-radio', 'value')])
+def update_figure(selected_countries, selected_year):
+    if not selected_countries or not selected_year:
+        return go.Figure()
+    else:
+        filtered_df = df[df.Year == selected_year]
+        filtered_df = filtered_df[filtered_df['Country'].isin(
+            selected_countries)]
+
+        latitudes_min = []
+        longitudes_min = []
+        latitudes_max = []
+        longitudes_max = []
+        for country in selected_countries:
+            loc = geolocate(country)
+            if loc is not None:
+                minx, miny, maxx, maxy = loc
+                latitudes_min.append(miny)
+                longitudes_min.append(minx)
+                latitudes_max.append(maxy)
+                longitudes_max.append(maxx)
+
+        if not latitudes_min or not longitudes_min or not latitudes_max or not longitudes_max:
+            print('Could not find geolocation for the selected countries.')
+            center_lat = 0
+            center_lon = 0
+        else:
+            center_lat = (max(latitudes_max) + min(latitudes_min)) / 2
+            center_lon = (max(longitudes_max) + min(longitudes_min)) / 2
+
+        fig = go.Figure(data=go.Choropleth(
+            locations=filtered_df['Country Code'],
+            z=filtered_df['Women Business and the Law Index Score (scale 1-100)'],
+            text=filtered_df['Country'],
+            colorscale='YlOrRd',
+            autocolorscale=False,
+            reversescale=True,
+            marker_line_color='darkgray',
+            marker_line_width=0.5,
+            colorbar_tickprefix='',
+            colorbar_title='Score',
+        ))
+
+        fig.update_layout(
+            geo=dict(
+                showframe=True,
+                showcoastlines=True,
+                projection_type='equirectangular',
+                center=dict(lat=center_lat, lon=center_lon),
+                projection_scale=2
+            ),
+            width=1400,
+            height=800,
+            autosize=True
+        )
+        fig.update_layout(
+            title_text='Geographical Women Business and the Law Index Score')
+
+        return fig
 
 
 if __name__ == '__main__':
