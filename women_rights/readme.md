@@ -161,3 +161,62 @@ def update_dropdown_values(selected_region, available_options):
         region_countries = regions[selected_region]
         return [country['value'] for country in available_options if country['value'] in region_countries]
 ```
+
+## Population Trend Over the Time
+
+The initial charts illustrate the trends in population over the years, but it is important to note that the actual values for population were standardized to facilitate a clearer assessment of the patterns of change. Three key features were employed in this analysis:
+- Population, total
+- Population, female
+- Population, male
+
+### Europe
+
+The overall trends for all European regions indicate a nearly equal population change between men and women over time. The United Kingdom and Spain show similar patterns with a consistent increase over the years. Poland, Italy, the Netherlands, and Germany also exhibit a predominantly increasing trend, with only minor fluctuations. Belgium experienced a notable increase until 1999, followed by a sharp decline in 2000, leading to a subsequent gradual decrease. In Sweden, there were sporadic changes before 1986, with intermittent increases and decreases. However, from 1986 until 2004, there was a significant and continuous increase, interrupted by a sudden decrease in 2010 but recovering again from 2011 onwards. Switzerland experienced growth until 1981, followed by a relatively stable period until 2002, after which there was a continuous increase until 2014, and a subsequent decline.
+
+The charts for females and males exhibit similar shapes, with Switzerland showing particularly pronounced changes. Female populations display more substantial variations compared to their male counterparts, leading to the inference that changes in population are potentially more linked to female demographics.
+
+![Europe Total Population](img/europe-total-population.png)
+![Europe Female Population](img/europe-female-population.png)
+![Europe Male Population](img/europe-male-population.png)
+
+
+### Middle East
+Among the Middle Eastern countries analyzed, Lebanon, Qatar, Saudi Arabia, Turkey, Israel, and Jordan demonstrate a gradual and steady increase in population over time. Iran, however, exhibits two distinct peaks, one around 1977 and another in 2012, with intermittent declines in between. Iraq experienced a significant change in its slope around 2005, characterized by a steep increase. The United Arab Emirates witnessed a sharp decrease in 1989, followed by consistent growth until 2019. Kuwait's population exhibited a steady increase until 2005, after which it followed a pronounced upward trajectory until 2010, eventually leveling off to a gradual incline.
+
+The changes observed in female and male populations closely mirror those of the total population, with the exception of Iraq, where the male line displays fluctuations compared to the relatively stable female line.
+
+![Middle East Total Population](img/middle-east-total-population.png)
+![Middle East Female Population](img/middle-east-female-population.png)
+![Middle East Male Population](img/middle-east-male-population.png)
+
+### Asia
+Across the Asian countries studied, Pakistan, the Philippines, Russia, Vietnam, Malaysia, Japan, India, and China all exhibit a similar pattern of population growth, characterized by a consistent upward trend. Thailand, however, displays a convex trend, reaching its peak around 2003 and declining thereafter. Indonesia's population increased steeply until 1990, followed by a relatively stable period until 1995, and then a gradual decrease until 2008, with minor changes thereafter.
+
+The patterns for male and female populations closely resemble that of the total population across these Asian countries.
+
+![Asia Total Population](img/asia-total-population.png)
+![Asia Female Population](img/asia-female-population.png)
+![Asia Male Population](img/asia-male-population.png)
+
+### Africa
+In all African countries analyzed, there is a uniform trend of population growth, with a smooth, steady increase over time. Ethiopia shows only marginal changes in its population line.
+
+![Africa Total Population](img/africa-total-population.png)
+![Africa Female Population](img/africa-female-population.png)
+![Africa Male Population](img/africa-male-population.png)
+
+### South America
+In most South American countries, including Guyana, Suriname, Uruguay, Venezuela, Ecuador, Brazil, and Colombia, the population follows a similar pattern with a consistent upward trend. Ecuador, however, displays a decline in population after 2017.
+
+Chile's population shows a slight decrease until 1980, followed by a pattern akin to other countries in the region. Argentina exhibits significant fluctuations, with periods of rapid increase, followed by declines and subsequent fluctuations.
+
+![South America Total Population](img/s-america-total-population.png)
+![South America Female Population](img/s-america-female-population.png)
+![South America Male Population](img/s-america-male-population.png)
+
+### North and Middle America
+Throughout North and Middle America, the trend of population growth remains consistent, with all countries showing a steady increase over time.
+
+![North and Middle America Total Population](img/n-america-total-population.png)
+![North and Middle America Female Population](img/n-america-female-population.png)
+![North and Middle America Male Population](img/n-america-male-population.png)
