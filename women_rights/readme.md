@@ -270,3 +270,75 @@ North American countries, the United States, and Canada both had labor force pro
 ## Employment Ratio Comparison by Genders
 The analysis presents the Employment to Population Ratio (EPR) categorized by gender and the total population. The EPR is calculated based on the percentage of employed individuals aged 15 and above in the respective gender and total populations. The data allows us to observe the employment trends among females and males separately, as well as the overall employment situation.
 
+Total Employment Ratio heat map displays exact values from previous charts, enabling a simultaneous comparison of employment ratios across all countries.
+
+### Europe
+In all European countries, the proportion of female workers is consistently lower than that of male workers. However, there are notable variations between countries. Except for Sweden, all other countries experienced an increase in the proportion of female workers over time, while Sweden witnessed a decrease from 60.2% to 55.36%.
+
+In terms of male workers, the Netherlands had a relatively stable employment ratio, with minor changes between 1990 and 2020. Poland, on the other hand, saw an increase from 61.47% to 64.16%. For the majority of other European countries, the proportion of male workers decreased over time.
+
+Switzerland witnessed a decline in male employment from approximately 80% in 1990 to 69.1% in 2021. Conversely, the proportion of female workers increased from 55.28% to 58.92% during the same period.
+
+Italy's female employment ratio rose significantly from 30.29% in 1990 to 35.83% in 2021, while the trend for male workers was decreasing (from 62.115% to 52.62%), indicating potential shifts in gender-related job distributions.
+
+In Belgium, the proportion of female workers increased from 33.92% in the past to 47.12% in 2021. In contrast, the proportion of male workers decreased from 58.54% to 55.20%. The reasons behind this disparity warrant further investigation.
+
+![Europe Employment Ratio and Labor Force](img/europe-gender-employment-ratio.png)
+
+### Middle East
+In Qatar, the male employment ratio showed a minor increase from 94.94% in 1990 to 96.6% in 2021. However, the percentage of women employed increased significantly from 45.32% to 59.6% over the years.
+
+Both Iran and Iraq experienced slight improvements in female employment, with percentages rising from about 7.5% to 12.196% for Iran and 7.83% for Iraq.
+
+Israel saw a noteworthy increase in the proportion of female workers, rising from 39.1% to 56.84%. Meanwhile, the male employment ratio remained relatively stable, changing from 63.89% to 63.67%.
+
+Saudi Arabia witnessed an improvement in the employment ratio, particularly around 2018. The percentage increased from 13.45% in 1990 to 17.379% in 2018 and further to 21.779% in 2021.
+
+Kuwait showed a moderate increase in female employment by approximately 5%, while male employment increased by around 7%.
+
+In the United Arab Emirates, the male employment ratio was significantly higher than that of females in both 1990 (87.37% vs. 28.72%) and 2021 (89.8% vs. 49.2%). Although there were improvements, the gender gap in employment remains significant.
+
+![Middle East Employment Ratio and Labor Force](img/middle-east-gender-employment-ratio.png)
+
+
+### Asia
+The employment charts for men in Asian countries show consistently high proportions, ranging from 67% to 80%, with Russia having the lowest rate. However, all countries experienced a decrease in male employment from 1990 to 2021.
+
+In the case of women, Pakistan and India had notably low employment ratios, with percentages around 30% and 34.5% respectively, possibly influenced by cultural factors such as patriarchy. Vietnam and Thailand witnessed a decline in the proportion of female workers, possibly linked to economic challenges.
+
+Indonesia, Japan, the Philippines, and Russia had intermediate employment ratios for both men and women, with slight increases for the former and slight decreases for the latter over time.
+
+![Asia Employment Ratio and Labor Force](img/asia-gender-employment-ratio.png)
+
+
+### Africa
+Ethiopia and Tanzania displayed high male employment ratios, above 80%. The trend for female employment was different, with Tanzania experiencing a decrease from 80% to 75% and Ethiopia witnessing an increase from 64.6% to 70.9%.
+
+Algeria, Egypt, and Morocco had very low female employment ratios, consistently below 15%, while male employment ratios ranged from 60% to 65%.
+
+Ghana saw a decrease of approximately 5% in male employment and around 12% in female employment from 1990 to 2021.
+
+In South Africa, the female employment ratio remained relatively stable, with only a 3% decrease over time. However, the male employment ratio experienced a more significant decline, decreasing from 62.41% to 45.31%.
+
+![Africa Employment Ratio and Labor Force](img/africa-gender-employment-ratio.png)
+
+
+### South America
+The employment ratios in South American countries displayed a wide range, from 25% to 85%. The majority of countries had female employment ratios between 40% and 50%.
+
+Guyana's employment ratio remained relatively stable, with a minor increase from 31.78% in 1990 to 32.95% in 2021. Suriname witnessed a significant increase from 25.99% to 39.02%.
+
+Peru displayed positive changes in both male and female employment ratios, with a notable increase for females from approximately 41% to 61.28% in 2021.
+
+Except for Peru in the male part and Suriname before 2008, other countries experienced a decrease in male employment ratios over the years.
+
+![South America Employment Ratio and Labor Force](img/s-america-gender-employment-ratio.png)
+
+### North and Middle America
+Similar to South America, North American countries had employment ratios ranging from 30% to 82%.
+
+Canada's male employment ratio remained stable, while other countries experienced a decrease from 1990 to 2021.
+
+For female employment ratios, except for Jamaica, all other countries experienced an increase over time.
+
+![North and Middle America Employment Ratio and Labor Force](img/n-america-gender-employment-ratio.png)
