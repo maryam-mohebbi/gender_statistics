@@ -1,4 +1,4 @@
-# Women's Rights and Gender Equality Around the World - Project Introduction
+# Women's Rights and Gender Equality Around the World
 
 ## Overview
 
@@ -945,3 +945,44 @@ Furthermore, we evaluated employment equality and life equality scores for each 
 Finally, we analyzed the Women Business and the Law Index Score, which measures how laws and regulations affect women's economic opportunity. This index provides insights into the legal framework supporting gender equality in various economies. While scores varied among countries, it is apparent that significant room for improvement remains in many regions to ensure equal opportunities for women in the business and legal realms.
 
 In conclusion, this project has shed light on the status of women's rights and gender equality across different parts of the world. The data visualizations and analyses have provided valuable insights into the progress made in gender equality and the challenges that persist. By understanding these trends and disparities, we can work towards promoting gender equality and empowering women in all aspects of life. However, it is crucial to recognize that achieving true gender equality requires continued efforts, policy changes, and societal transformation on a global scale. Only by addressing these issues collectively can we build a world where women's rights are upheld, and gender equality is a reality for everyone, regardless of their geographic location.
+
+# design decision details
+
+The objective of this project is to shed light on the status of women's rights across the world, focusing on key indicators such as life equality, employment equality, population distribution, and labor force participation. Initially, the goal was to encapsulate all the information into a single chart, but it became apparent that this approach lacked the depth required to comprehensively represent women's rights. As a result, a multi-faceted approach was adopted, utilizing various visualization techniques to compare different aspects and provide a more nuanced understanding of the subject matter.
+
+**1. Message the Figure is Supposed to Convey:**
+The figure aims to convey a holistic view of women's rights by presenting a comparative analysis of crucial indicators across ten selected countries. Rather than a singular focus, the visualizations aim to highlight the interconnectedness of various aspects and their impact on women's empowerment. By presenting a comprehensive picture, the figure seeks to reveal trends, disparities, and progress made in different regions over time.
+
+**2. Target Audience:**
+The target audience for this visualization is individuals interested in gender equality, human rights activists, policymakers, researchers, and anyone seeking a comprehensive overview of women's rights globally.
+
+**3. Reason for Choosing Specific Visualizations:**
+
+a. **Line Charts for Populations and Labor Force/Employment Ratio:**
+
+- Advantages: Line charts effectively display trends over time, allowing for easy comparison between different variables. They enable the visualization of population changes and employment ratios over the years for each country.
+- Disadvantages: When multiple line charts overlap, readability can be an issue, especially with ten countries. To address this, separate charts for total population, male population, and female population are used.
+
+b. **Subplot Charts for Employment Ratio and Labor Force Ratio:**
+
+- Advantages: Subplot charts allow side-by-side comparison of two related indicators, such as employment ratio and labor force ratio, in a single visualization. The use of distinct colors (red and blue) aids in differentiating between the two indicators.
+- Disadvantages: If too many subplots are used, the visual clutter can reduce interpretability. However, in this case, the number of subplots is manageable (one for each country).
+
+c. **Heatmap for Gender Employment Ratio, Life Equality, and Employment Equality:**
+
+- Advantages: Heatmaps are effective for comparing one feature (gender employment ratio) across multiple countries over several years. They highlight patterns and changes through the use of colors.
+- Reason for 'Viridis' Colors: 'Viridis' colors offer smoother transitions, making it easier to interpret the heatmap, especially with long lines representing several years of data.
+
+d. **Geographic Maps for Business and Law Score:**
+
+- Advantages: Geographic maps provide a spatial perspective, allowing viewers to see both the scores and the location/size of the countries simultaneously. This helps in understanding regional variations in business and law scores.
+- Disadvantages: Geographical distortion might occur when representing countries near the poles.
+
+**4. Design Decisions:**
+
+a. Rearrangement of Line Charts: To avoid overlapping, the line charts for population distribution are separated into three charts: total population, male population, and female population. The 2-row and 5-column arrangement ensures better visibility and comparison.
+
+b. Rotating X and Y Values in Heatmaps: By using years on the X-axis and countries on the Y-axis, the changes in life equality, and employment equality are more easily readable.
+
+**Conclusion:**
+By combining various visualization types and making thoughtful design decisions, the figure effectively presents a comprehensive picture of women's rights across different countries. The use of line charts, subplot charts, heatmaps, and geographic maps allows for easy comparison, trend analysis, and spatial understanding, making the figure informative and insightful for the target audience.
