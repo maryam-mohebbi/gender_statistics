@@ -225,18 +225,18 @@ def update_employment_ratio_chart(selected_countries):
     max_val_list = []
 
     fig.add_trace(
-        go.Scatter(x=[None], y=[None], 
-                   mode='lines', 
-                   name='Employment Ratio', 
-                   line=dict(color='red'), 
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Employment Ratio',
+                   line=dict(color='red'),
                    showlegend=True)
     )
 
     fig.add_trace(
-        go.Scatter(x=[None], y=[None], 
-                   mode='lines', 
-                   name='Labor Force Proportion', 
-                   line=dict(color='blue'), 
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Labor Force Proportion',
+                   line=dict(color='blue'),
                    showlegend=True)
     )
 
@@ -283,17 +283,16 @@ def update_employment_ratio_chart(selected_countries):
     fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
 
     fig.update_layout(
-    height=420*n_rows, 
-    title_text='Comparison between Employment Ratio and Labor Force Proportion', 
-    showlegend=True,
-    legend=dict(
-        yanchor="bottom",
-        y=-0.2,
-        xanchor="center",
-        x=0.5
+        height=420*n_rows,
+        title_text='Comparison between Employment Ratio and Labor Force Proportion',
+        showlegend=True,
+        legend=dict(
+            yanchor='bottom',
+            y=-0.2,
+            xanchor='center',
+            x=0.5
+        )
     )
-)
-
 
     fig.add_annotation(
         dict(
@@ -318,7 +317,6 @@ def update_employment_ratio_chart(selected_countries):
     )
 
     return fig
-
 
 
 @app.callback(
