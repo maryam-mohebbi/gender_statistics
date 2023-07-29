@@ -42,14 +42,126 @@ With the groundwork set, we are now ready to delve into the fascinating world of
 
 ### Data Import and Preparation
 
+```
+from geopy.geocoders import Nominatim
+import pandas as pd
+import plotly.express as px
+from dash import Dash
+from dash import dcc, html
+from dash.dependencies import Input, Output, State
+import plotly.graph_objs as go
+from sklearn.preprocessing import StandardScaler
+from plotly.subplots import make_subplots
+from math import ceil
+import geopandas as gpd
+
+
+geolocator = Nominatim(user_agent='geoapiExercises')
+
+
+def prepare_data(file_path):
+    df = pd.read_csv(file_path)
+
+    df = df[['Series Name', 'Country Name', 'Country Code'] +
+            [col for col in df if col.startswith('19') or col.startswith('20')]]
+
+    df = df.melt(id_vars=['Series Name', 'Country Name', 'Country Code'],
+                 var_name='Year', value_name='Value')
+
+    df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
+
+    df = df.pivot_table(index=['Country Name', 'Year', 'Country Code'],
+                        columns='Series Name', values='Value').reset_index()
+
+    df.columns.name = ''
+    df.rename(columns={'Country Name': 'Country'}, inplace=True)
+
+    all_countries = df['Country'].unique().tolist()
+    return df, all_countries
+
+
+group_features = ['Population, total',
+                  'Population, female',
+                  'Population, male',]
+
+regions = {
+    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Belgium', 'Netherlands', 'Switzerland', 'Sweden', 'Poland'],
+    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye', 'United Arab Emirates', 'Iraq', 'Lebanon', 'Qatar', 'Jordan', 'Kuwait'],
+    'Asia': ['China', 'Japan', 'India', 'Vietnam', 'Russian Federation', 'Thailand', 'Indonesia', 'Pakistan', 'Philippines', 'Malaysia'],
+    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya', 'Morocco', 'Ethiopia', 'Tanzania', 'Algeria', 'Ghana', 'Uganda'],
+    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Uruguay', 'Colombia', 'Chile', 'Peru', 'Guyana', 'Suriname', 'Ecuador'],
+    'North and middle America': ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
+
+}
+
+df, all_countries = prepare_data('../../data/cleaned_data.csv')
+df_original = df.copy()
+```
 
 ### Import App layout and Set Order of Charts
 
+```
+app = Dash(__name__)
+
+
+app.layout = html.Div([
+    dcc.Dropdown(
+        id='country-dropdown',
+        options=[{'label': country, 'value': country}
+                 for country in all_countries],
+        multi=True,
+        value=[]
+    ),
+    dcc.RadioItems(
+        id='region-radio',
+        options=[{'label': region, 'value': region}
+                 for region in regions.keys()],
+        value=None
+    ),
+    dcc.Graph(id='line-chart-total'),
+    dcc.Graph(id='line-chart-female'),
+    dcc.Graph(id='line-chart-male'),
+    dcc.Graph(id='employment-ratio-chart'),
+    dcc.Graph(id='employment-ratio-chart-heatmap'),
+    dcc.Graph(id='employment-equality-chart'),
+    dcc.Graph(id='life-equality-chart'),
+    html.Label('Select Year:'),
+    dcc.RadioItems(
+        id='year-radio',
+        options=[{'label': str(i), 'value': i}
+                 for i in [1970, 1980, 1990, 2000, 2010, 2020]],
+        value=2020,
+        labelStyle={'display': 'inline-block'}
+    ),
+    html.Div(
+        dcc.Graph(id='world-map'),
+        style={
+            'display': 'flex',
+            'justify-content': 'center',
+            'width': '100%'
+        }
+    ),
+
+])
+```
 
 ## Dynamic Country Dropdown Selection Based on Region
 
 This part of the report defines a callback function using the Dash framework to update the values displayed in the country dropdown menu based on the selected region. When a user selects a region using the radio buttons, the country dropdown will dynamically update to show only the countries belonging to the selected region, providing a streamlined and relevant user experience for data exploration.
 
+```
+@app.callback(
+    Output('country-dropdown', 'value'),
+    [Input('region-radio', 'value')],
+    [State('country-dropdown', 'options')]
+)
+def update_dropdown_values(selected_region, available_options):
+    if selected_region is None:
+        return []
+    else:
+        region_countries = regions[selected_region]
+        return [country['value'] for country in available_options if country['value'] in region_countries]
+```
 
 ## Population Trend Over the Time
 
@@ -115,6 +227,98 @@ Throughout North and Middle America, the trend of population growth remains cons
 ![North and Middle America Female Population](img/n-america-female-population.png)
 ![North and Middle America Male Population](img/n-america-male-population.png)
 
+```
+def get_standardized_population_chart(selected_countries, population_type):
+    if len(selected_countries) > 10:
+        return go.Figure()
+    else:
+        column_name = f'Population, {population_type}'
+        filtered_df = df_original[df_original['Country'].isin(
+            selected_countries)][['Year', 'Country', column_name]]
+
+        scaler = StandardScaler()
+        for country in selected_countries:
+            filtered_df.loc[filtered_df['Country'] == country, column_name] = scaler.fit_transform(
+                filtered_df.loc[filtered_df['Country'] == country, column_name].values.reshape(-1, 1))
+
+        melted_df = pd.melt(filtered_df, id_vars=['Year', 'Country'], value_vars=[column_name],
+                            var_name='Population Type', value_name='Value')
+
+        fig = px.line(melted_df, x='Year', y='Value', color='Population Type', facet_col='Country', facet_col_wrap=5,
+                      title=f'Standardized {population_type.capitalize()} Population Over Time')
+
+        fig.update_xaxes(tickangle=45)
+
+        num_rows = -(-len(selected_countries) // 5)
+
+        for i in range(len(selected_countries)):
+            fig.layout.annotations[i]['text'] = selected_countries[i]
+
+            if (i // 5) + 1 < num_rows:
+                fig.layout[f'xaxis{i+1}'].title.text = ''
+
+        colors = {'Population, total': 'green',
+                  'Population, male': 'blue', 'Population, female': 'red'}
+        for trace in fig.data:
+            population_type_name = trace.name
+            trace.line.color = colors[population_type_name]
+
+        for axis in fig.layout:
+            if 'yaxis' in axis:
+                fig.layout[axis]['title'] = ''
+
+        fig.add_annotation(
+            dict(
+                x=-0.04,
+                y=0.5,
+                showarrow=False,
+                text='Standardized Population Value',
+                textangle=-90,
+                xref='paper',
+                yref='paper'
+            )
+        )
+
+        fig.add_annotation(
+            dict(
+                x=0.5,
+                y=-0.3,
+                showarrow=False,
+                text='Year',
+                xref='paper',
+                yref='paper'
+            )
+        )
+
+        fig.update_layout(showlegend=False)
+
+        return fig
+
+
+@app.callback(
+    Output('line-chart-total', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_total_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'total')
+
+
+@app.callback(
+    Output('line-chart-female', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_female_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'female')
+
+
+@app.callback(
+    Output('line-chart-male', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_male_population_chart(selected_countries):
+    return get_standardized_population_chart(selected_countries, 'male')
+```
+
 ## Comparison between Employment Ratio and Labor Force Proportion
 
 The comparison between the labor force, employment ratio, and population aims to examine whether these indicators exhibit similar trends over time. It is anticipated that the labor force and employment ratio would follow a similar pattern as the population, but other factors such as economic conditions and natural resources could influence these values.
@@ -162,6 +366,127 @@ In South America, Peru experienced the most significant changes in both labor fo
 North American countries, the United States, and Canada both had labor force proportions above 50%. However, the employment ratio for the United States was consistently less than 50%, while Canada's employment ratio ranged from 45% to 52.5% over the years. Costa Rica reached a labor force proportion of 50% in 2020, while Jamaica reached more than 50% in 2015, with maximum employment ratios of 50.39% in 2021, indicating the active participation of a significant portion of their populations in the labor force.
 
 ![North and Middle America Employment Ratio and Labor Force](img/n-america-employment-vs-labor-force.png)
+
+```
+@app.callback(
+    Output('employment-ratio-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_ratio_chart(selected_countries):
+    if not selected_countries:
+        return go.Figure()
+
+    filtered_df = df[df['Country'].isin(selected_countries)]
+    filtered_df = filtered_df[filtered_df['Year'] >= 1990]
+
+    filtered_df['Labor force proportion'] = (
+        filtered_df['Labor force, total'] / filtered_df['Population, total']) * 100
+
+    n = len(selected_countries)
+    n_cols = min(5, n)
+    n_rows = ceil(n / n_cols)
+
+    fig = make_subplots(rows=n_rows, cols=n_cols,
+                        subplot_titles=selected_countries, vertical_spacing=0.1)
+
+    min_val_list = []
+    max_val_list = []
+
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Employment Ratio',
+                   line=dict(color='red'),
+                   showlegend=True)
+    )
+
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Labor Force Proportion',
+                   line=dict(color='blue'),
+                   showlegend=True)
+    )
+
+    for i, country in enumerate(selected_countries, start=1):
+        country_df = filtered_df[filtered_df['Country'] == country]
+
+        labor_force_employment_proportion = (
+            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
+            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
+            country_df['Population, total']
+        )
+
+        min_country = min(labor_force_employment_proportion.min(),
+                          country_df['Labor force proportion'].min())
+        max_country = max(labor_force_employment_proportion.max(),
+                          country_df['Labor force proportion'].max())
+
+        min_val_list.append(min_country)
+        max_val_list.append(max_country)
+
+        row = ceil(i / n_cols)
+        col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
+
+        fig.add_trace(
+            go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
+                       name=f'Employment Ratio', hovertemplate='Year=%{x}<br>Employment Ratio=%{y}',
+                       line=dict(color='red'), showlegend=False),
+            row=row, col=col
+        )
+        fig.add_trace(
+            go.Scatter(x=country_df['Year'], y=country_df['Labor force proportion'],
+                       name=f'Labor Force Proportion', hovertemplate='Year=%{x}<br>Labor Force Proportion=%{y}',
+                       line=dict(color='blue'), showlegend=False),
+            row=row, col=col
+        )
+
+    min_val = min(min_val_list)
+    max_val = max(max_val_list)
+
+    fig.update_xaxes(title_text='')
+    fig.update_yaxes(title_text='', secondary_y=False)
+    fig.update_yaxes(title_text='', secondary_y=True)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
+
+    fig.update_layout(
+    height=420*n_rows,
+    title_text='Comparison between Employment Ratio and Labor Force Proportion',
+    showlegend=True,
+    legend=dict(
+        yanchor="bottom",
+        y=-0.2,
+        xanchor="center",
+        x=0.5
+    )
+)
+
+
+    fig.add_annotation(
+        dict(
+            x=-0.04,
+            y=0.5,
+            showarrow=False,
+            text='Proportions (%)',
+            textangle=-90,
+            xref='paper',
+            yref='paper'
+        )
+    )
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.1,
+            showarrow=False,
+            text='Year',
+            xref='paper',
+            yref='paper'
+        )
+    )
+
+    return fig
+```
 
 ## Employment Ratio Comparison by Genders
 
@@ -242,6 +567,63 @@ Canada's male employment ratio remained stable, while other countries experience
 For female employment ratios, except for Jamaica, all other countries experienced an increase over time.
 
 ![North and Middle America Employment Ratio and Labor Force](img/n-america-gender-employment-ratio.png)
+
+```
+@app.callback(
+    Output('employment-ratio-chart-heatmap', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_ratio_heatmap(selected_countries):
+    if len(selected_countries) > 10:
+        return go.Figure()
+    else:
+        filtered_df = df_original[df_original['Country'].isin(
+            selected_countries)]
+        filtered_df = filtered_df[filtered_df['Year'] > 1990]
+
+        employment_features = [
+            'Employment to population ratio, 15+, female (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, male (%) (modeled ILO estimate)',
+            'Employment to population ratio, 15+, total (%) (modeled ILO estimate)'
+        ]
+
+        global_min = filtered_df[employment_features].min().min()
+        global_max = filtered_df[employment_features].max().max()
+
+        custom_titles = ['Female Employment Ratio',
+                         'Male Employment Ratio', 'Total Employment Ratio']
+
+        n = len(employment_features)
+        n_cols = min(5, n)
+        n_rows = ceil(n / n_cols)
+
+        fig = make_subplots(rows=n_rows, cols=n_cols,
+                            subplot_titles=custom_titles, vertical_spacing=0.1)
+
+        for idx, (feature, title) in enumerate(zip(employment_features, custom_titles)):
+            heatmap_df = filtered_df.pivot(
+                index='Year', columns='Country', values=feature)
+
+            row = ceil((idx+1) / n_cols)
+            col = (idx+1) if (idx+1) <= n_cols else (idx +
+                                                     1) % n_cols if (idx+1) % n_cols != 0 else n_cols
+
+            fig.add_trace(
+                go.Heatmap(
+                    z=heatmap_df.values,
+                    x=heatmap_df.columns.values,
+                    y=heatmap_df.index.values,
+                    zmin=global_min,
+                    zmax=global_max,
+                    hoverongaps=False,
+                    name=title,
+                ),
+                row=row, col=col
+            )
+
+        fig.update_layout(title_text='Employment Ratio Comparison by Genders')
+        return fig
+```
 
 ## Employment Equality and Life Equality Score
 
@@ -325,6 +707,101 @@ Costa Rica, the Dominican Republic, and Jamaica scored 0.937 in 2021, and Panama
 ![North and Middle America Employment Equality](img/n-america-employment-equality.png)
 ![North and Middle America Life Equality](img/n-america-life-equality.png)
 
+```
+employment_features = [
+    'A woman can get a job in the same way as a man (1=yes; 0=no)',
+    'A woman can work at night in the same way as a man (1=yes; 0=no)',
+    'A woman can work in a job deemed dangerous in the same way as a man (1=yes; 0=no)',
+    'A woman can work in an industrial job in the same way as a man (1=yes; 0=no)',
+    'Dismissal of pregnant workers is prohibited (1=yes; 0=no)',
+    'Law mandates equal remuneration for females and males for work of equal value (1=yes; 0=no)',
+    'There is paid parental leave (1=yes; 0=no)',
+    'Paid leave is available to fathers (1=yes; 0=no)',
+    'Paid leave of at least 14 weeks available to mothers (1=yes; 0=no)',
+    'The age at which men and women can retire with full pension benefits is the same (1=yes; 0=no)',
+    'The age at which men and women can retire with partial pension benefits is the same (1=yes; 0=no)',
+    'The government administers 100% of maternity leave benefits (1=yes; 0=no)',
+    'The law prohibits discrimination in employment based on gender (1=yes; 0=no)',
+    'The law provides for the valuation of nonmonetary contributions (1=yes; 0=no)',
+    'The mandatory retirement age for men and women is the same (1=yes; 0=no)',
+    'There are periods of absence due to childcare accounted for in pension benefits (1=yes; 0=no)',
+    'Criminal penalties or civil remedies exist for sexual harassment in employment (1=yes; 0=no)',
+    'There is legislation on sexual harassment in employment (1=yes; 0=no)'
+]
+
+life_features = [
+    'A woman can open a bank account in the same way as a man (1=yes; 0=no)',
+    'Male and female surviving spouses have equal rights to inherit assets (1=yes; 0=no)',
+    'Men and women have equal ownership rights to immovable property (1=yes; 0=no)',
+    'The law grants spouses equal administrative authority over assets during marriage (1=yes; 0=no)',
+    'The law prohibits discrimination in access to credit based on gender (1=yes; 0=no)',
+    'A woman can apply for a passport in the same way as a man (1=yes; 0=no)',
+    'A woman can be head of household in the same way as a man (1=yes; 0=no)',
+    'A woman can choose where to live in the same way as a man (1=yes; 0=no)',
+    'A woman can obtain a judgment of divorce in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside her home in the same way as a man (1=yes; 0=no)',
+    'A woman can travel outside the country in the same way as a man (1=yes; 0=no)',
+    'A woman has the same rights to remarry as a man (1=yes; 0=no)',
+    'The law is free of legal provisions that require a married woman to obey her husband (1=yes; 0=no)',
+    'There is legislation specifically addressing domestic violence (1=yes; 0=no)',
+    'A woman can register a business in the same way as a man (1=yes; 0=no)',
+    'A woman can sign a contract in the same way as a man (1=yes; 0=no)'
+]
+
+
+def calculate_average_score(df, selected_countries, features):
+    df_selected = df[df['Country'].isin(selected_countries)]
+
+    for feature in features:
+        df_selected[feature] = df_selected[feature].interpolate()
+
+    df_selected['Average Score'] = df_selected[features].mean(axis=1)
+    df_selected = df_selected[['Country', 'Year', 'Average Score']]
+
+    return df_selected
+
+
+@app.callback(
+    Output('employment-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_equality_chart(selected_countries):
+    df_score = calculate_average_score(
+        df, selected_countries, employment_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Employment Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
+
+
+@app.callback(
+    Output('life-equality-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_life_equality_chart(selected_countries):
+    df_score = calculate_average_score(df, selected_countries, life_features)
+
+    heatmap_data = df_score.pivot(
+        index='Country', columns='Year', values='Average Score')
+
+    fig = px.imshow(heatmap_data,
+                    labels=dict(x='Year', y='Country', color='Average Score'),
+                    title='Life Equality Score Over Time',
+                    color_continuous_scale='Viridis')
+
+    fig.update_xaxes(nticks=len(heatmap_data.columns.unique()))
+
+    return fig
+```
+
 ## Women Business and the Law Index Score
 
 In the preceding section, we assessed the score of each country by evaluating its laws. Now, in the following section, our objective is to compare the 'Women Business and the Law Index Score', a unique feature obtained directly from the data source. We will be specifically focusing on the results from 2020 and comparing neighboring countries. The aim is to observe trends in a particular area and its neighboring regions. To present this data visually, we have mapped the information. It's worth noting that while similarities are expected among neighboring countries, there may be some variations, represented by different colors on the map. The intention is to avoid a completely uniform color range and allow for distinguishing nuances in the data.
@@ -371,6 +848,87 @@ North America demonstrates relatively close scores on the map. Canada has the hi
 
 ![North and Middle America Women Business and the Law Index Score](img/n-america-women-bussiness-and-law-score.png)
 
+```
+world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+
+def geolocate(country):
+    try:
+        geometry = world[world['name'] == country]['geometry'].values[0]
+        bounds = geometry.bounds
+        return bounds
+    except (IndexError, AttributeError):
+        print(f'Cannot find {country}')
+        return None
+
+
+@app.callback(
+    Output('world-map', 'figure'),
+    [Input('country-dropdown', 'value'),
+     Input('year-radio', 'value')])
+def update_figure(selected_countries, selected_year):
+    if not selected_countries or not selected_year:
+        return go.Figure()
+    else:
+        filtered_df = df[df.Year == selected_year]
+        filtered_df = filtered_df[filtered_df['Country'].isin(
+            selected_countries)]
+
+        latitudes_min = []
+        longitudes_min = []
+        latitudes_max = []
+        longitudes_max = []
+        for country in selected_countries:
+            loc = geolocate(country)
+            if loc is not None:
+                minx, miny, maxx, maxy = loc
+                latitudes_min.append(miny)
+                longitudes_min.append(minx)
+                latitudes_max.append(maxy)
+                longitudes_max.append(maxx)
+
+        if not latitudes_min or not longitudes_min or not latitudes_max or not longitudes_max:
+            print('Could not find geolocation for the selected countries.')
+            center_lat = 0
+            center_lon = 0
+        else:
+            center_lat = (max(latitudes_max) + min(latitudes_min)) / 2
+            center_lon = (max(longitudes_max) + min(longitudes_min)) / 2
+
+        fig = go.Figure(data=go.Choropleth(
+            locations=filtered_df['Country Code'],
+            z=filtered_df['Women Business and the Law Index Score (scale 1-100)'],
+            text=filtered_df['Country'],
+            colorscale='YlOrRd',
+            autocolorscale=False,
+            reversescale=True,
+            marker_line_color='darkgray',
+            marker_line_width=0.5,
+            colorbar_tickprefix='',
+            colorbar_title='Score',
+        ))
+
+        fig.update_layout(
+            geo=dict(
+                showframe=True,
+                showcoastlines=True,
+                projection_type='equirectangular',
+                center=dict(lat=center_lat, lon=center_lon),
+                projection_scale=2
+            ),
+            width=1400,
+            height=800,
+            autosize=True
+        )
+        fig.update_layout(
+            title_text='Geographical Women Business and the Law Index Score')
+
+        return fig
+
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
+```
 
 # Conclusion
 
