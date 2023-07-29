@@ -436,3 +436,49 @@ Costa Rica, the Dominican Republic, and Jamaica scored 0.937 in 2021, and Panama
 
 ![North and Middle America Employment Equality](img/n-america-employment-equality.png)
 ![North and Middle America Life Equality](img/n-america-life-equality.png)
+
+## Women Business and the Law Index Score
+
+In the preceding section, we assessed the score of each country by evaluating its laws. Now, in the following section, our objective is to compare the 'Women Business and the Law Index Score', a unique feature obtained directly from the data source. We will be specifically focusing on the results from 2020 and comparing neighboring countries. The aim is to observe trends in a particular area and its neighboring regions. To present this data visually, we have mapped the information. It's worth noting that while similarities are expected among neighboring countries, there may be some variations, represented by different colors on the map. The intention is to avoid a completely uniform color range and allow for distinguishing nuances in the data.
+
+In addition, another goal of visualizing the data on a geographic map is to explore whether the size of these countries we are analyzing has any influence on their respective scores. We are curious to see if there is a correlation between a country's size and its score on the index. For instance, we want to investigate whether smaller countries tend to have higher scores, or if larger countries tend to have lower scores, though we must note that this relationship may not necessarily exist. It's important to mention that we currently lack any verified resources to definitively prove or disprove such a correlation.
+
+The index measures how laws and regulations affect women’s economic opportunity. Overall scores are calculated by taking the average score of each index (Mobility, Workplace, Pay, Marriage, Parenthood, Entrepreneurship, Assets and Pension), with 100 representing the highest possible score.
+
+Women, Business and the Law tracks progress toward legal equality between men and women in 190 economies. Data are collected with standardized questionnaires to ensure comparability across economies. Questionnaires are administered to over 2,000 respondents with expertise in family, labor, and criminal law, including lawyers, judges, academics, and members of civil society organizations working on gender issues. Respondents provide responses to the questionnaires and references to relevant laws and regulations.
+
+### Europe
+
+In Europe, there is a relatively consistent score range across most countries. Switzerland stands out with the lowest score (indicated by red color) in the 4th place, while Poland has the second-lowest score (indicated by orange color) in the 3rd place. The other countries show similar scores in this region.
+
+![Europe Women Business and the Law Index Score](img/europe-women-bussiness-and-law-score.png)
+
+### Middle East
+
+In the Middle East, it is evident that the scores do not reach the maximum of 100. Countries with better life and employment equality, such as Turkey, Israel, Saudi Arabia, and the United Arab Emirates, also have higher scores in this indicator. On the other hand, Kuwait, Qatar, and Iran, which have lower life and employment equality, also exhibit the lowest scores in this area.
+
+![Middle East Women Business and the Law Index Score](img/middle-east-women-bussiness-and-law-score.png)
+
+### Asia
+
+In Asia, Russia, India, and China, three of the largest countries in the region, show similar scores. As observed in previous indicators, Pakistan and Malaysia have the lowest scores in this part as well.
+
+![Asia Women Business and the Law Index Score](img/asia-women-bussiness-and-law-score.png)
+
+### Africa
+
+The scores in Africa also exhibit a relatively uniform range among seven out of ten countries. Egypt stands out with the lowest score of 45, while the maximum score is 88.12. Most countries in this region fall within the intermediate range of scores.
+
+![Africa Women Business and the Law Index Score](img/africa-women-bussiness-and-law-score.png)
+
+### South America
+
+In South America, there is a consistent trend as seen before. Peru leads with the highest score (95), and it is worth noting that the minimum score in this area is 70, indicating a relatively smaller difference between the highest and lowest scores compared to other regions. South America shows a lower range of scores in comparison to other regions, with few fluctuations (except for Europe with higher values in all indicators).
+
+![South America Women Business and the Law Index Score](img/s-america-women-bussiness-and-law-score.png)
+
+### North and Middle America
+
+North America demonstrates relatively close scores on the map. Canada has the highest score, followed by the United States with a score of 91.25 in the 2nd place. Middle American countries also have similar scores, with a lower range than North America.
+
+![North and Middle America Women Business and the Law Index Score](img/n-america-women-bussiness-and-law-score.png)
