@@ -42,126 +42,14 @@ With the groundwork set, we are now ready to delve into the fascinating world of
 
 ### Data Import and Preparation
 
-```
-from geopy.geocoders import Nominatim
-import pandas as pd
-import plotly.express as px
-from dash import Dash
-from dash import dcc, html
-from dash.dependencies import Input, Output, State
-import plotly.graph_objs as go
-from sklearn.preprocessing import StandardScaler
-from plotly.subplots import make_subplots
-from math import ceil
-import geopandas as gpd
-
-
-geolocator = Nominatim(user_agent='geoapiExercises')
-
-
-def prepare_data(file_path):
-    df = pd.read_csv(file_path)
-
-    df = df[['Series Name', 'Country Name', 'Country Code'] +
-            [col for col in df if col.startswith('19') or col.startswith('20')]]
-
-    df = df.melt(id_vars=['Series Name', 'Country Name', 'Country Code'],
-                 var_name='Year', value_name='Value')
-
-    df['Year'] = df['Year'].str.extract('(\d+)').astype(int)
-
-    df = df.pivot_table(index=['Country Name', 'Year', 'Country Code'],
-                        columns='Series Name', values='Value').reset_index()
-
-    df.columns.name = ''
-    df.rename(columns={'Country Name': 'Country'}, inplace=True)
-
-    all_countries = df['Country'].unique().tolist()
-    return df, all_countries
-
-
-group_features = ['Population, total',
-                  'Population, female',
-                  'Population, male',]
-
-regions = {
-    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy', 'Spain', 'Belgium', 'Netherlands', 'Switzerland', 'Sweden', 'Poland'],
-    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye', 'United Arab Emirates', 'Iraq', 'Lebanon', 'Qatar', 'Jordan', 'Kuwait'],
-    'Asia': ['China', 'Japan', 'India', 'Vietnam', 'Russian Federation', 'Thailand', 'Indonesia', 'Pakistan', 'Philippines', 'Malaysia'],
-    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya', 'Morocco', 'Ethiopia', 'Tanzania', 'Algeria', 'Ghana', 'Uganda'],
-    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Uruguay', 'Colombia', 'Chile', 'Peru', 'Guyana', 'Suriname', 'Ecuador'],
-    'North and middle America': ['United States', 'Canada', 'Mexico', 'Panama', 'Costa Rica', 'Jamaica', 'Dominican Republic'],
-
-}
-
-df, all_countries = prepare_data('../../data/cleaned_data.csv')
-df_original = df.copy()
-```
 
 ### Import App layout and Set Order of Charts
 
-```
-app = Dash(__name__)
-
-
-app.layout = html.Div([
-    dcc.Dropdown(
-        id='country-dropdown',
-        options=[{'label': country, 'value': country}
-                 for country in all_countries],
-        multi=True,
-        value=[]
-    ),
-    dcc.RadioItems(
-        id='region-radio',
-        options=[{'label': region, 'value': region}
-                 for region in regions.keys()],
-        value=None
-    ),
-    dcc.Graph(id='line-chart-total'),
-    dcc.Graph(id='line-chart-female'),
-    dcc.Graph(id='line-chart-male'),
-    dcc.Graph(id='employment-ratio-chart'),
-    dcc.Graph(id='employment-ratio-chart-heatmap'),
-    dcc.Graph(id='employment-equality-chart'),
-    dcc.Graph(id='life-equality-chart'),
-    html.Label('Select Year:'),
-    dcc.RadioItems(
-        id='year-radio',
-        options=[{'label': str(i), 'value': i}
-                 for i in [1970, 1980, 1990, 2000, 2010, 2020]],
-        value=2020,
-        labelStyle={'display': 'inline-block'}
-    ),
-    html.Div(
-        dcc.Graph(id='world-map'),
-        style={
-            'display': 'flex',
-            'justify-content': 'center',
-            'width': '100%'
-        }
-    ),
-
-])
-```
 
 ## Dynamic Country Dropdown Selection Based on Region
 
 This part of the report defines a callback function using the Dash framework to update the values displayed in the country dropdown menu based on the selected region. When a user selects a region using the radio buttons, the country dropdown will dynamically update to show only the countries belonging to the selected region, providing a streamlined and relevant user experience for data exploration.
 
-```
-@app.callback(
-    Output('country-dropdown', 'value'),
-    [Input('region-radio', 'value')],
-    [State('country-dropdown', 'options')]
-)
-def update_dropdown_values(selected_region, available_options):
-    if selected_region is None:
-        return []
-    else:
-        region_countries = regions[selected_region]
-        return [country['value'] for country in available_options if country['value'] in region_countries]
-```
 
 ## Population Trend Over the Time
 
@@ -482,3 +370,20 @@ In South America, there is a consistent trend as seen before. Peru leads with th
 North America demonstrates relatively close scores on the map. Canada has the highest score, followed by the United States with a score of 91.25 in the 2nd place. Middle American countries also have similar scores, with a lower range than North America.
 
 ![North and Middle America Women Business and the Law Index Score](img/n-america-women-bussiness-and-law-score.png)
+
+
+# Conclusion
+
+In this project, we set out to explore and compare the situation of women's rights and gender equality across various regions and countries worldwide. Through data visualization and analysis using the World Bank's Gender Statistics database, we aimed to gain insights into how different regions and countries have progressed in terms of gender equality over the years.
+
+The analysis of population trends across regions revealed interesting patterns. In general, the population of both males and females has been increasing over time. However, there are some variations in the growth rates and fluctuations among different countries. Notably, female populations often displayed more substantial variations compared to their male counterparts, indicating potential shifts in demographics and societal factors affecting women's lives.
+
+Additionally, we compared the employment ratios and labor force proportions among countries. It was observed that some countries have consistently higher labor force proportions and employment ratios, suggesting a more active and engaged workforce. On the other hand, certain countries faced challenges in achieving higher labor force participation, possibly due to cultural, economic, or social factors.
+
+We also examined the employment ratios categorized by gender and the total population. It was evident that across regions, the proportion of female workers in the labor force was consistently lower than that of male workers. This discrepancy highlights the ongoing gender disparities in the workforce.
+
+Furthermore, we evaluated employment equality and life equality scores for each country. The results showed that while some countries have made significant progress in both areas, others still face challenges in achieving gender equality. Certain countries in Europe demonstrated higher scores in employment and life equality, while some countries in the Middle East and Asia struggled with lower scores.
+
+Finally, we analyzed the Women Business and the Law Index Score, which measures how laws and regulations affect women's economic opportunity. This index provides insights into the legal framework supporting gender equality in various economies. While scores varied among countries, it is apparent that significant room for improvement remains in many regions to ensure equal opportunities for women in the business and legal realms.
+
+In conclusion, this project has shed light on the status of women's rights and gender equality across different parts of the world. The data visualizations and analyses have provided valuable insights into the progress made in gender equality and the challenges that persist. By understanding these trends and disparities, we can work towards promoting gender equality and empowering women in all aspects of life. However, it is crucial to recognize that achieving true gender equality requires continued efforts, policy changes, and societal transformation on a global scale. Only by addressing these issues collectively can we build a world where women's rights are upheld, and gender equality is a reality for everyone, regardless of their geographic location.
