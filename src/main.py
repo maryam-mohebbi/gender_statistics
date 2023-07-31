@@ -7,8 +7,7 @@ from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from math import ceil
 import numpy as np
-
-# Function to create a bar chart for binary categories
+from sklearn.preprocessing import StandardScaler
 
 
 def binary_categories_bar_creation(filtered_df, category_code, year_range, number_of_country, country):
@@ -50,8 +49,6 @@ def binary_categories_bar_creation(filtered_df, category_code, year_range, numbe
 
     return binary_trace
 
-# Function to create a histogram chart for binary categories
-
 
 def binary_categories_hist_creation(filtered_df, category_code, year_range, number_of_country, country):
     series_df = filtered_df[(filtered_df['Series Code'] == category_code) & (
@@ -75,8 +72,6 @@ def binary_categories_hist_creation(filtered_df, category_code, year_range, numb
         showlegend=True
     )
     return trace
-
-# Function to create the return object for a category chart
 
 
 def create_return_for_category(data, x_values, category_code, title):
@@ -109,19 +104,17 @@ def create_return_for_category(data, x_values, category_code, title):
                 xanchor='center',
                 yanchor='top',
                 orientation='h',
-                traceorder="normal",
+                traceorder='normal',
                 font=dict(
-                    family="sans-serif",
+                    family='sans-serif',
                     size=12,
-                    color="black"
+                    color='black'
                 ),
-                bordercolor="Black",
+                bordercolor='Black',
                 borderwidth=2
             )
         )
     }
-
-# Function to create the return object for a histogram category chart
 
 
 def create_return_for_hist_category(data, x_values, category_code, title):
@@ -148,13 +141,13 @@ def create_return_for_hist_category(data, x_values, category_code, title):
                 xanchor='center',
                 yanchor='top',
                 orientation='h',
-                traceorder="normal",
+                traceorder='normal',
                 font=dict(
-                    family="sans-serif",
+                    family='sans-serif',
                     size=12,
-                    color="black"
+                    color='black'
                 ),
-                bordercolor="Black",
+                bordercolor='Black',
                 borderwidth=2,
                 title='',
                 itemsizing='constant'
@@ -163,12 +156,10 @@ def create_return_for_hist_category(data, x_values, category_code, title):
     }
 
 
-# Dictionary of series data
 series_data = {
     'NY.GDP.MKTP.CD': 'GDP (current US$)'
 }
 
-# Dictionary of binary series data
 binary_series_data = {
     'SG.GET.JOBS.EQ': 'A woman can get a job in the same way as a man',
     'SG.IND.WORK.EQ': 'A woman can work in an industrial job in the same way as a man',
@@ -177,7 +168,6 @@ binary_series_data = {
     'SG.CNT.SIGN.EQ': 'A woman can sign a contract in the same way as a man'
 }
 
-# Dictionary of country colors
 country_colors = {
     0: '#fed98e',
     1: '#fe9929',
@@ -185,56 +175,44 @@ country_colors = {
     3: '#993404'
 }
 
-# Read the data from CSV
 df = pd.read_csv('../data/cleaned_data.csv')
 
-# Select relevant columns from the dataframe
 df_series = df[['Series Name', 'Country Name'] +
                [col for col in df if col.startswith('19') or col.startswith('20')]]
 
-# Melt the dataframe
 df_series = df_series.melt(
     id_vars=['Series Name', 'Country Name'], var_name='Year', value_name='Value')
 
-# Convert the 'Year' column to integer
 df_series['Year'] = df_series['Year'].str.extract('(\d+)').astype(int)
 
-# Pivot the dataframe
 df_series = df_series.pivot_table(
     index=['Country Name', 'Year'], columns='Series Name', values='Value').reset_index()
 
-# Rename the columns
 df_series.columns.name = ''
 df_series.rename(columns={'Country Name': 'Country'}, inplace=True)
 
-# List of group features
 group_features = [
     'Population, total',
     'Population, female',
     'Population, male'
 ]
 
-# Regions dictionary
 regions = {
-    "Europe": ["United Kingdom", "France", "Germany", "Italy"],
-    "Middle East": ["Saudi Arabia", "Iran, Islamic Rep.", "Israel", "Turkiye"],
-    "Asia": ["China", "Japan", "India", "Vietnam"],
-    "Africa": ["Egypt, Arab Rep.", "South Africa", "Nigeria", "Kenya"],
-    "South America": ["Brazil", 'Argentina', 'Venezuela, RB', "Uruguay"],
-    "North and middle America": ['United States', 'Canada', 'Mexico', 'Panama']
+    'Europe': ['United Kingdom', 'France', 'Germany', 'Italy'],
+    'Middle East': ['Saudi Arabia', 'Iran, Islamic Rep.', 'Israel', 'Turkiye'],
+    'Asia': ['China', 'Japan', 'India', 'Vietnam'],
+    'Africa': ['Egypt, Arab Rep.', 'South Africa', 'Nigeria', 'Kenya'],
+    'South America': ['Brazil', 'Argentina', 'Venezuela, RB', 'Peru'],
+    'North and middle America': ['United States', 'Canada', 'Mexico']
 }
 
-# List of all countries
 all_countries = df_series['Country'].unique().tolist()
 
-# Copy of the dataframe
 df_series_original = df_series.copy()
 
-# Create the Dash app
 app = Dash(__name__)
 
 app.layout = html.Div([
-    # Dropdown for country selection
     dcc.Dropdown(
         id='country-dropdown',
         options=[{'label': country, 'value': country}
@@ -242,29 +220,24 @@ app.layout = html.Div([
         multi=True,
         value=[]
     ),
-    # RadioItems for region selection
     dcc.RadioItems(
         id='region-radio',
         options=[{'label': region, 'value': region}
                  for region in regions.keys()],
         value=None
     ),
-    # Animated bar chart
     dcc.Graph(id='animated-chart'),
     html.P(
-        "* The red circle shows the maximum values for population over the time",
+        '* The red circle shows the maximum values for population over the time',
         id='paragraph',
         style={'padding': '10px'}
     ),
 
-    # Population charts
     html.Div([
-        dcc.Graph(id='total-population-chart', style={'width': '33%'}),
-        dcc.Graph(id='male-population-chart', style={'width': '33%'}),
-        dcc.Graph(id='female-population-chart', style={'width': '33%'}),
-    ], style={'display': 'flex'}),
+        dcc.Graph(id='line-chart-total', style={'width': '33%'}),
+        dcc.Graph(id='line-chart-female', style={'width': '33%'}),
+        dcc.Graph(id='line-chart-male', style={'width': '33%'}),], style={'display': 'flex'}),
     html.Div(style={'height': '50px'}),
-    # Year slider
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -273,13 +246,11 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
-    # Indicator graph
-            html.H2(children='Prosperity of the economy depends on the participation of women'),
+    html.H2(children='Prosperity of the economy depends on the participation of women'),
 
     dcc.Graph(id='indicator-graph'),
     html.Div(style={'height': '50px'}),
     html.Div([
-        # Binary indicator graphs
         html.H2(children='A woman can:'),
         html.Div([
             dcc.Graph(id='sg_get_jobs_eq_binary-indicator-graph',
@@ -291,9 +262,9 @@ app.layout = html.Div([
         ], style={'display': 'flex'}),
     ]),
     html.P(
-        ["* Women Business and the Law Index Score: The index measures how laws and regulations affect women’s economic opportunity.", 
-        html.Br(),
-        "Overall scores are calculated by taking the average score of each index (Mobility, Workplace, Pay, Marriage, Parenthood, Entrepreneurship, Assets and Pension), with 100 representing the highest possible score."],
+        ['* Women Business and the Law Index Score: The index measures how laws and regulations affect women’s economic opportunity.',
+         html.Br(),
+         'Overall scores are calculated by taking the average score of each index (Mobility, Workplace, Pay, Marriage, Parenthood, Entrepreneurship, Assets and Pension), with 100 representing the highest possible score.'],
         id='paragraph',
         style={'padding': '10px'}
     ),
@@ -312,8 +283,6 @@ app.layout = html.Div([
     dcc.Graph(id='animated-scatter-chart'),
 ])
 
-# Callback to update dropdown values based on region selection
-
 
 @app.callback(
     Output('country-dropdown', 'value'),
@@ -326,8 +295,6 @@ def update_dropdown_values(selected_region, available_options):
     else:
         region_countries = regions[selected_region]
         return [country['value'] for country in available_options if country['value'] in region_countries]
-
-# Callback to update the animated chart
 
 
 @app.callback(
@@ -343,11 +310,11 @@ def population_chart(selected_countries):
         melted_df_series = pd.melt(filtered_df_series, id_vars=[
                                    'Country', 'Year'], value_vars=group_features, var_name='Feature', value_name='Value')
         fig1 = px.bar(melted_df_series,
-                      x="Country",
+                      x='Country',
                       y='Value',
-                      color="Feature",
-                      animation_frame="Year",
-                      animation_group="Country",
+                      color='Feature',
+                      animation_frame='Year',
+                      animation_group='Country',
                       labels={'Value': 'Population'},
                       title='Population Change Over Time',
                       barmode='group')
@@ -365,105 +332,48 @@ def population_chart(selected_countries):
 
         return fig1
 
-# Callback to update the total population chart
 
-
-@app.callback(
-    Output('total-population-chart', 'figure'),
-    [Input('country-dropdown', 'value')]
-)
-def total_population_chart(selected_countries):
-    return population_line_chart('Population, total', selected_countries, 'Total Population')
-
-# Callback to update the male population chart
-
-
-@app.callback(
-    Output('male-population-chart', 'figure'),
-    [Input('country-dropdown', 'value')]
-)
-def male_population_chart(selected_countries):
-    return population_line_chart('Population, male', selected_countries, 'Male Population')
-
-# Callback to update the female population chart
-
-
-@app.callback(
-    Output('female-population-chart', 'figure'),
-    [Input('country-dropdown', 'value')]
-)
-def female_population_chart(selected_countries):
-    return population_line_chart('Population, female', selected_countries, 'Female Population')
-
-# Helper function to create population line charts
-
-
-def population_line_chart(feature, selected_countries, chart_title):
-    if len(selected_countries) > 4:
+def get_standardized_population_chart(selected_countries, population_type):
+    if len(selected_countries) > 10:
         return go.Figure()
     else:
-        filtered_df_series = df_series_original[df_series_original['Country'].isin(
-            selected_countries)]
-        melted_df_series = pd.melt(filtered_df_series, id_vars=['Country', 'Year'], value_vars=[
-                                   feature], var_name='Feature', value_name='Value')
+        column_name = f'Population, {population_type}'
+        filtered_df = df_series_original[df_series_original['Country'].isin(
+            selected_countries)][['Year', 'Country', column_name]]
 
-        if melted_df_series.empty:
-            return go.Figure()
+        scaler = StandardScaler()
+        for country in selected_countries:
+            filtered_df.loc[filtered_df['Country'] == country, column_name] = scaler.fit_transform(
+                filtered_df.loc[filtered_df['Country'] == country, column_name].values.reshape(-1, 1))
 
-        scaler = MinMaxScaler()
-        melted_df_series['Value'] = scaler.fit_transform(
-            melted_df_series[['Value']])
+        melted_df = pd.melt(filtered_df, id_vars=['Year', 'Country'], value_vars=[column_name],
+                            var_name='Population Type', value_name='Value')
 
-        line_chart = px.line(melted_df_series,
-                             x="Year",
-                             y="Value",
-                             color="Country",
-                             labels={'Value': feature})
+        fig = px.line(melted_df, x='Year', y='Value', color='Country',
+                      title=f'Standardized {population_type.capitalize()} Population Over Time')
 
-        line_chart.update_layout(
-            title_text=chart_title,
-            xaxis=dict(
-                title='Year',
-                tickangle=45,
-                showgrid=True,
-                range=[1970, 2021],
-                tickvals=[i for i in range(int(melted_df_series['Year'].min()), int(
-                    melted_df_series['Year'].max()) + 1, 5)]
-            ),
-            yaxis=dict(
-                overlaying='y',
-                tickangle=-90,
-                range=[0, 1],
-                showgrid=True,
-                tickvals=[0, 1],
-                ticktext=['0', '1']
-            ),
-            hovermode='x',
-            autosize=True,
-            margin=dict(l=50, r=50, t=150, b=50),
-            legend=dict(
-                x=0.5,
-                y=-0.5,
-                xanchor='center',
-                yanchor='top',
-                orientation='h',
-                traceorder="normal",
-                font=dict(
-                    family="sans-serif",
-                    size=12,
-                    color="black"
-                ),
-                bordercolor="Black",
-                borderwidth=2,
-                title='',
-                itemsizing='constant'
-            )
-        )
+        fig.update_xaxes(tickangle=45)
 
-        return line_chart
+        fig.update_layout(showlegend=True, legend=dict(
+            orientation='h', y=-0.3, title=''), legend_title_text='')
+
+        return fig
 
 
-# Callback to update the graphs
+@app.callback(
+    [Output('line-chart-total', 'figure'),
+     Output('line-chart-female', 'figure'),
+     Output('line-chart-male', 'figure')],
+    [Input('country-dropdown', 'value')]
+)
+def update_population_chart(selected_countries):
+    total_chart = get_standardized_population_chart(
+        selected_countries, 'total')
+    female_chart = get_standardized_population_chart(
+        selected_countries, 'female')
+    male_chart = get_standardized_population_chart(selected_countries, 'male')
+
+    return total_chart, female_chart, male_chart
 
 
 @app.callback(
@@ -549,13 +459,9 @@ def update_graph(selected_countries, year_range):
                                    'Work in an industrial job<br>in the same way as a man'),
         create_return_for_hist_category(
             sg_sec_enrr_fe_traces, x_values, 'SE.TER.ENRR.FE', 'Gross enrollment ratio for tertiary school '),
-        # create_return_for_hist_category(
-        #     sg_law_indx_en_traces, x_values, 'SG.LAW.INDX.EN', 'Women, Business and the Law: Entrepreneurship Indicator Score'),
         create_return_for_category(sg_cnt_sign_eq_traces, x_values,
                                    'SG.CNT.SIGN.EQ', 'Sign a contract in the <br> same way as a man')
     )
-
-# Calback to draw GDP chart
 
 
 @app.callback(
@@ -569,7 +475,7 @@ def animated_gpd(selected_countries):
         filtered_df = df_series_original[df_series_original['Country'].isin(
             selected_countries)]
         chart = px.scatter(filtered_df, x='GDP per capita (Current US$)', y='Life expectancy at birth, total (years)',
-                           animation_frame='Year', animation_group='Country', size="Population, total", color='Country', log_x=True, size_max=55, range_x=[100, 100000], range_y=[25, 100],
+                           animation_frame='Year', animation_group='Country', size='Population, total', color='Country', log_x=True, size_max=55, range_x=[100, 100000], range_y=[25, 100],
                            labels={
                                'x': 'GDP per capita (Current US$)', 'y': 'Life expectancy at birth, total (years)'},
                            title='GDP vs Life Expectancy Over Time')
@@ -593,13 +499,13 @@ def update_law_index(selected_countries):
         filtered_df = filtered_df[filtered_df['Year'] >= 1990]
 
         employment_features = [
-            "Women Business and the Law Index Score (scale 1-100)",
-            "Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)",
-            "Women, Business and the Law: Mobility Indicator Score (scale 1-100)",
-            "Women, Business and the Law: Pay Indicator Score (scale 1-100)"
+            'Women Business and the Law Index Score (scale 1-100)',
+            'Women, Business and the Law: Entrepreneurship Indicator Score (scale 1-100)',
+            'Women, Business and the Law: Mobility Indicator Score (scale 1-100)',
+            'Women, Business and the Law: Pay Indicator Score (scale 1-100)'
         ]
 
-        custom_titles = ["Women Business and the Law Index Score", 'Entrepreneurship Indicator Score', 'Mobility Indicator Score', 'Pay Indicator Score'
+        custom_titles = ['Women Business and the Law Index Score', 'Entrepreneurship Indicator Score', 'Mobility Indicator Score', 'Pay Indicator Score'
 
                          ]
 
@@ -633,6 +539,5 @@ def update_law_index(selected_countries):
         return figures
 
 
-# Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
