@@ -25,11 +25,6 @@ df_series = df_series.pivot_table(
 df_series.columns.name = ''
 df_series.rename(columns={'Country Name': 'Country'}, inplace=True)
 
-group_features = [
-    'Population, total',
-    'Population, female',
-    'Population, male'
-]
 
 regions = {
     'Europe': ['United Kingdom', 'France', 'Germany', 'Italy'],
@@ -50,6 +45,57 @@ country_colors = {
 all_countries = df_series['Country'].unique().tolist()
 
 df_series_original = df_series.copy()
+
+def update_layout(fig, title, xaxis_title, yaxis_title):
+    fig.update_layout(
+        title=title,
+        xaxis=dict(
+            title=xaxis_title,
+            showgrid=True,
+            gridcolor='LightGray',
+            showline=True,
+            linecolor='black',
+        ),
+        yaxis=dict(
+            title=yaxis_title,
+            showgrid=True,
+            gridcolor='LightGray',
+            showline=True,
+            linecolor='black',
+        ),
+        autosize=True,
+        plot_bgcolor='rgba(0,0,0,0)',
+        paper_bgcolor='rgba(0,0,0,0)',
+
+        legend=dict(
+            x=0.5,
+            y=-0.5,
+            xanchor='center',
+            yanchor='top',
+            orientation='h',
+            traceorder='normal',
+            font=dict(
+                family='sans-serif',
+                size=12,
+                color='black'
+            ),
+            bordercolor='Black',
+            borderwidth=2
+        ),
+    )
+    return fig
+
+def filter_df(df, selected_countries, years_range):
+    return df[(df['Country'].isin(selected_countries)) &
+              (df['Year'].between(years_range[0], years_range[1]))]
+
+def add_trace(fig, x, y, mode, name, line_color):
+    fig.add_trace(go.Scatter(x=x,
+                             y=y,
+                             mode=mode,
+                             name=name,
+                             line=dict(color=line_color)))
+    return fig
 
 app = Dash(__name__)
 
@@ -72,6 +118,9 @@ app.layout = html.Div([
         dcc.Graph(id='line-chart-total', style={'width': '33%'}),
         dcc.Graph(id='line-chart-female', style={'width': '33%'}),
         dcc.Graph(id='line-chart-male', style={'width': '33%'}),], style={'display': 'flex'}),
+
+    dcc.Graph(id='employment-ratio-chart'),
+
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -80,7 +129,6 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
-    dcc.Graph(id='employment-ratio-chart'),
     dcc.Graph(id='gdp-line-chart'),
     html.Div([
         dcc.Graph(id='chart-women-job', style={'width': '33%'}),
@@ -121,6 +169,12 @@ def population_chart(selected_countries):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
+
+        group_features = [
+    'Population, total',
+    'Population, female',
+    'Population, male'
+]
         filtered_df_series = df_series_original[df_series_original['Country'].isin(
             selected_countries)]
         melted_df_series = pd.melt(filtered_df_series, id_vars=[
@@ -179,7 +233,10 @@ def get_standardized_population_chart(selected_countries, population_type):
             traceorder='normal',
             title='',
             bordercolor='Black',
-            borderwidth=2), legend_title_text='')
+            borderwidth=2), legend_title_text='', title={
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'},)
 
         return fig
 
@@ -337,57 +394,17 @@ def gdp_chart(selected_countries, years_range):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
-        filtered_df_series = df_series_original[(df_series_original['Country'].isin(selected_countries)) &
-                                                (df_series_original['Year'].between(years_range[0], years_range[1]))]
+        filtered_df_series = filter_df(df_series_original, selected_countries, years_range)
 
         fig = go.Figure()
         for i, country in enumerate(selected_countries):
             country_data = filtered_df_series[filtered_df_series['Country'] == country]
-            fig.add_trace(go.Scatter(x=country_data['Year'],
-                                     y=country_data['GDP (current US$)'],
-                                     mode='lines',
-                                     name=country,
-                                     line=dict(color=country_colors[i % len(country_colors)])))
+            fig = add_trace(fig, country_data['Year'], country_data['GDP (current US$)'], 'lines', country, country_colors[i % len(country_colors)])
 
-        fig.update_layout(
-            title='GDP Change Over Time (current US$)',
-            xaxis=dict(
-                title='Year',
-                showgrid=True,
-                gridcolor='LightGray',
-                showline=True,
-                linecolor='black',
-            ),
-            yaxis=dict(
-                title='GDP (current US$)',
-                showgrid=True,
-                gridcolor='LightGray',
-                showline=True,
-                linecolor='black',
-
-            ),
-            autosize=True,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-
-            legend=dict(
-                x=0.5,
-                y=-0.5,
-                xanchor='center',
-                yanchor='top',
-                orientation='h',
-                traceorder='normal',
-                font=dict(
-                    family='sans-serif',
-                    size=12,
-                    color='black'
-                ),
-                bordercolor='Black',
-                borderwidth=2
-            ),
-        )
+        fig = update_layout(fig, 'GDP Change Over Time (current US$)', 'Year', 'GDP (current US$)')
 
         return fig
+
 
 
 @app.callback(
@@ -410,9 +427,8 @@ def update_bar_charts(selected_countries, years_range):
         fig = go.Figure()
 
         for i, country in enumerate(selected_countries):
-            country_data = df_series_original[(df_series_original['Country'] == country) &
-                                              (df_series_original['Year'].between(years_range[0], years_range[1])) &
-                                              (df_series_original['Year'].astype(str).str[-1] == '5')]
+            country_data = filter_df(df_series_original, [country], years_range)
+            country_data = country_data[country_data['Year'].astype(str).str[-1] == '5']
 
             country_data = country_data[['Year', feature]]
             country_data.set_index('Year', inplace=True)
@@ -434,61 +450,12 @@ def update_bar_charts(selected_countries, years_range):
             fig.add_trace(binary_trace)
         clean_feature_title = feature.replace(' (1=yes; 0=no)', '')
 
-        fig.update_layout(
-
-            title={
-                'text': f'{clean_feature_title}',
-                'x': 0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'},
-            title_font=dict(
-                family='sans-serif',
-                size=12,
-                color='black',
-            ),
-            xaxis=dict(
-                title='Year',
-                dtick=5,
-                tickangle=45,
-                showgrid=True,
-                range=[years_range[0], years_range[1]],
-                gridcolor='LightGray',
-                showline=True,
-                linecolor='black',
-            ),
-            yaxis2=dict(
-                overlaying='y',
-                tickangle=-90,
-                range=[0, 2],
-                showgrid=True,
-                tickvals=[1, 2],
-                ticktext=['no', 'yes']
-            ),
-            hovermode='x',
-            autosize=True,
-            margin=dict(l=50, r=50, t=150, b=50),
-            legend=dict(
-                x=0.5,
-                y=-0.5,
-                xanchor='center',
-                yanchor='top',
-                orientation='h',
-                traceorder='normal',
-                font=dict(
-                    family='sans-serif',
-                    size=12,
-                    color='black'
-                ),
-                bordercolor='Black',
-                borderwidth=2
-            ),
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-        )
+        fig = update_layout(fig, clean_feature_title, 'Year', '')
 
         figures.append(fig)
 
     return figures
+
 
 
 @app.callback(
@@ -500,8 +467,7 @@ def enrolment_line_chart(selected_countries, years_range):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
-        filtered_df_series = df_series_original[(df_series_original['Country'].isin(selected_countries)) &
-                                                (df_series_original['Year'].between(years_range[0], years_range[1]))]
+        filtered_df_series = filter_df(df_series_original, selected_countries, years_range)
 
         fig = go.Figure()
         for i, country in enumerate(selected_countries):
@@ -510,48 +476,9 @@ def enrolment_line_chart(selected_countries, years_range):
             country_data['School enrollment, tertiary, female (% gross)'] = country_data[
                 'School enrollment, tertiary, female (% gross)'].interpolate()
 
-            fig.add_trace(go.Scatter(x=country_data['Year'],
-                                     y=country_data['School enrollment, tertiary, female (% gross)'],
-                                     mode='lines',
-                                     name=country,
-                                     line=dict(color=country_colors[i % len(country_colors)])))
+            fig = add_trace(fig, country_data['Year'], country_data['School enrollment, tertiary, female (% gross)'], 'lines', country, country_colors[i % len(country_colors)])
 
-        fig.update_layout(
-            title='Gross enrollment ratio for tertiary school',
-            xaxis=dict(
-                title='Year',
-                showgrid=True,
-                gridcolor='LightGray',
-                showline=True,
-                linecolor='black',
-            ),
-            yaxis=dict(
-                title='% gross',
-                showgrid=True,
-                gridcolor='LightGray',
-                showline=True,
-                linecolor='black',
-            ),
-            autosize=True,
-            plot_bgcolor='rgba(0,0,0,0)',
-            paper_bgcolor='rgba(0,0,0,0)',
-
-            legend=dict(
-                x=0.5,
-                y=-0.5,
-                xanchor='center',
-                yanchor='top',
-                orientation='h',
-                traceorder='normal',
-                font=dict(
-                    family='sans-serif',
-                    size=12,
-                    color='black'
-                ),
-                bordercolor='Black',
-                borderwidth=2
-            ),
-        )
+        fig = update_layout(fig, 'Gross enrollment ratio for tertiary school', 'Year', '% gross')
 
         return fig
 
