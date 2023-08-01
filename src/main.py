@@ -7,6 +7,7 @@ from dash.dependencies import Input, Output, State
 from sklearn.preprocessing import StandardScaler
 from plotly.subplots import make_subplots
 from math import ceil
+from scipy import stats
 
 
 df = pd.read_csv('../data/cleaned_data.csv')
@@ -46,9 +47,15 @@ all_countries = df_series['Country'].unique().tolist()
 
 df_series_original = df_series.copy()
 
+
 def update_layout(fig, title, xaxis_title, yaxis_title):
     fig.update_layout(
-        title=title,
+        title={
+            'text': title,
+            'y': 0.9,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
         xaxis=dict(
             title=xaxis_title,
             showgrid=True,
@@ -85,9 +92,11 @@ def update_layout(fig, title, xaxis_title, yaxis_title):
     )
     return fig
 
+
 def filter_df(df, selected_countries, years_range):
     return df[(df['Country'].isin(selected_countries)) &
               (df['Year'].between(years_range[0], years_range[1]))]
+
 
 def add_trace(fig, x, y, mode, name, line_color):
     fig.add_trace(go.Scatter(x=x,
@@ -96,6 +105,7 @@ def add_trace(fig, x, y, mode, name, line_color):
                              name=name,
                              line=dict(color=line_color)))
     return fig
+
 
 app = Dash(__name__)
 
@@ -114,13 +124,14 @@ app.layout = html.Div([
         value=None
     ),
     dcc.Graph(id='population-animated-chart'),
+    html.Div(style={'height': '50px'}),
     html.Div([
         dcc.Graph(id='line-chart-total', style={'width': '33%'}),
         dcc.Graph(id='line-chart-female', style={'width': '33%'}),
         dcc.Graph(id='line-chart-male', style={'width': '33%'}),], style={'display': 'flex'}),
-
+    html.Div(style={'height': '50px'}),
     dcc.Graph(id='employment-ratio-chart'),
-
+    html.Div(style={'height': '50px'}),
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -129,14 +140,17 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
+    html.Div(style={'height': '50px'}),
     dcc.Graph(id='gdp-line-chart'),
+    html.Div(style={'height': '50px'}),
     html.Div([
         dcc.Graph(id='chart-women-job', style={'width': '33%'}),
         dcc.Graph(id='chart-women-industrial-job', style={'width': '33%'}),
         dcc.Graph(id='chart-women-contract', style={'width': '33%'}),
     ], style={'display': 'flex'}),
-
+    html.Div(style={'height': '50px'}),
     dcc.Graph(id='enrolment-line-chart'),
+    html.Div(style={'height': '50px'}),
     html.Div([
         html.Div([dcc.Graph(id='heatmap-lawscore')], style={'width': '25%'}),
         html.Div([dcc.Graph(id='heatmap-entrepreneurship')],
@@ -144,7 +158,8 @@ app.layout = html.Div([
         html.Div([dcc.Graph(id='heatmap-mobility')], style={'width': '25%'}),
         html.Div([dcc.Graph(id='heatmap-pay')], style={'width': '25%'}),
     ], style={'display': 'flex'}),
-    dcc.Graph(id='animated-scatter-chart'),
+    html.Div(style={'height': '50px'}),
+    dcc.Graph(id='multi-scatter-chart'),
 ])
 
 
@@ -171,10 +186,10 @@ def population_chart(selected_countries):
     else:
 
         group_features = [
-    'Population, total',
-    'Population, female',
-    'Population, male'
-]
+            'Population, total',
+            'Population, female',
+            'Population, male'
+        ]
         filtered_df_series = df_series_original[df_series_original['Country'].isin(
             selected_countries)]
         melted_df_series = pd.melt(filtered_df_series, id_vars=[
@@ -186,9 +201,15 @@ def population_chart(selected_countries):
                      animation_frame='Year',
                      animation_group='Country',
                      labels={'Value': 'Population'},
-                     title='Population Change Over Time',
-                     barmode='group')
-        fig.update_layout(yaxis_range=[0, melted_df_series['Value'].max()])
+                     barmode='group'
+
+                     )
+        fig.update_layout(yaxis_range=[0, melted_df_series['Value'].max()],
+                          title={
+                              'text': 'Population Change Over Time',
+                              'x': 0.5,
+                              'xanchor': 'center',
+                              'yanchor': 'top'},)
 
         max_pop = melted_df_series[melted_df_series['Feature'] ==
                                    'Population, total'].groupby('Country')['Value'].max()
@@ -233,7 +254,9 @@ def get_standardized_population_chart(selected_countries, population_type):
             traceorder='normal',
             title='',
             bordercolor='Black',
-            borderwidth=2), legend_title_text='', title={
+            borderwidth=2),
+            legend_title_text='',
+            title={
                 'x': 0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},)
@@ -341,7 +364,13 @@ def update_employment_ratio_chart(selected_countries):
 
     fig.update_layout(
         height=420*n_rows,
-        title_text='Comparison between Employment Ratio and Labor Force Proportion',
+
+        title={
+            'text': 'Comparison between Employment Ratio and Labor Force Proportion',
+                    'y': 0.9,
+                    'x': 0.5,
+                    'xanchor': 'center',
+                    'yanchor': 'top'},
         showlegend=True,
         legend=dict(
             x=0.5,
@@ -394,17 +423,19 @@ def gdp_chart(selected_countries, years_range):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
-        filtered_df_series = filter_df(df_series_original, selected_countries, years_range)
+        filtered_df_series = filter_df(
+            df_series_original, selected_countries, years_range)
 
         fig = go.Figure()
         for i, country in enumerate(selected_countries):
             country_data = filtered_df_series[filtered_df_series['Country'] == country]
-            fig = add_trace(fig, country_data['Year'], country_data['GDP (current US$)'], 'lines', country, country_colors[i % len(country_colors)])
+            fig = add_trace(fig, country_data['Year'], country_data['GDP (current US$)'],
+                            'lines', country, country_colors[i % len(country_colors)])
 
-        fig = update_layout(fig, 'GDP Change Over Time (current US$)', 'Year', 'GDP (current US$)')
+        fig = update_layout(
+            fig, 'GDP Change Over Time (current US$)', 'Year', 'GDP (current US$)')
 
         return fig
-
 
 
 @app.callback(
@@ -427,8 +458,10 @@ def update_bar_charts(selected_countries, years_range):
         fig = go.Figure()
 
         for i, country in enumerate(selected_countries):
-            country_data = filter_df(df_series_original, [country], years_range)
-            country_data = country_data[country_data['Year'].astype(str).str[-1] == '5']
+            country_data = filter_df(df_series_original, [
+                                     country], years_range)
+            country_data = country_data[country_data['Year'].astype(
+                str).str[-1] == '5']
 
             country_data = country_data[['Year', feature]]
             country_data.set_index('Year', inplace=True)
@@ -457,7 +490,6 @@ def update_bar_charts(selected_countries, years_range):
     return figures
 
 
-
 @app.callback(
     Output('enrolment-line-chart', 'figure'),
     [Input('country-dropdown', 'value'),
@@ -467,7 +499,8 @@ def enrolment_line_chart(selected_countries, years_range):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
-        filtered_df_series = filter_df(df_series_original, selected_countries, years_range)
+        filtered_df_series = filter_df(
+            df_series_original, selected_countries, years_range)
 
         fig = go.Figure()
         for i, country in enumerate(selected_countries):
@@ -476,9 +509,11 @@ def enrolment_line_chart(selected_countries, years_range):
             country_data['School enrollment, tertiary, female (% gross)'] = country_data[
                 'School enrollment, tertiary, female (% gross)'].interpolate()
 
-            fig = add_trace(fig, country_data['Year'], country_data['School enrollment, tertiary, female (% gross)'], 'lines', country, country_colors[i % len(country_colors)])
+            fig = add_trace(fig, country_data['Year'], country_data['School enrollment, tertiary, female (% gross)'],
+                            'lines', country, country_colors[i % len(country_colors)])
 
-        fig = update_layout(fig, 'Gross enrollment ratio for tertiary school', 'Year', '% gross')
+        fig = update_layout(
+            fig, 'Gross enrollment ratio for tertiary school', 'Year', '% gross')
 
         return fig
 
@@ -532,11 +567,7 @@ def update_law_index(selected_countries):
                     'x': 0.5,
                     'xanchor': 'center',
                     'yanchor': 'top'},
-                title_font=dict(
-                    family='sans-serif',
-                    size=12,
-                    color='black'
-                ),),
+            ),
 
             figures.append(fig)
 
@@ -544,22 +575,68 @@ def update_law_index(selected_countries):
 
 
 @app.callback(
-    Output('animated-scatter-chart', 'figure'),
+    Output('multi-scatter-chart', 'figure'),
     [Input('country-dropdown', 'value')]
 )
-def animated_gpd(selected_countries):
+def dgp_lifeexpectancy_scatter(selected_countries):
     if len(selected_countries) > 4:
         return go.Figure()
     else:
-        filtered_df = df_series_original[df_series_original['Country'].isin(
-            selected_countries)]
-        chart = px.scatter(filtered_df, x='GDP per capita (Current US$)', y='Life expectancy at birth, total (years)',
-                           animation_frame='Year', animation_group='Country', size='Population, total', color='Country', log_x=True, size_max=55, range_x=[100, 100000], range_y=[25, 100],
-                           labels={
-                               'x': 'GDP per capita (Current US$)', 'y': 'Life expectancy at birth, total (years)'},
-                           title='GDP vs Life Expectancy Over Time')
+        fig = make_subplots(rows=1, cols=4, subplot_titles=selected_countries)
+        
+        for i, country in enumerate(selected_countries):
+            country_data = df_series_original[df_series_original['Country'] == country]
 
-        return chart
+            country_data['Year'] = pd.to_datetime(country_data['Year'], format='%Y')
+            country_data.set_index('Year', inplace=True)
+            country_data.interpolate(method='time', inplace=True)
+
+            fig.add_trace(go.Scatter(x=country_data['GDP per capita (Current US$)'], 
+                                     y=country_data['Life expectancy at birth, total (years)'],
+                                     mode='markers',
+                                     name=f"{country} data",
+                                     showlegend=False),
+                                     row = 1, col=i + 1)
+
+            if len(country_data) > 1 and country_data['GDP per capita (Current US$)'].std() != 0 and country_data['Life expectancy at birth, total (years)'].std() != 0:
+                country_data = country_data.dropna(subset=['GDP per capita (Current US$)', 'Life expectancy at birth, total (years)'])
+                
+                if country_data['GDP per capita (Current US$)'].nunique() > 1 and country_data['Life expectancy at birth, total (years)'].nunique() > 1:
+                    slope, intercept, _, _, _ = stats.linregress(country_data['GDP per capita (Current US$)'], 
+                                                                country_data['Life expectancy at birth, total (years)'])
+
+                else:
+                    fig.add_annotation(text=f"Correlation: N/A",
+                                    xref='x domain', yref='y domain',
+                                    x=0.05, y=0.95, showarrow=False,
+                                    row = 1, col=i + 1)
+
+                fig.add_trace(go.Scatter(x=country_data['GDP per capita (Current US$)'],
+                                         y=slope*country_data['GDP per capita (Current US$)']+intercept,
+                                         mode='lines',
+                                         name=f"{country} best fit",
+                                         showlegend=False),
+                                         row = 1, col=i + 1)
+
+                correlation = np.corrcoef(country_data['GDP per capita (Current US$)'], country_data['Life expectancy at birth, total (years)'])[0, 1]
+                fig.add_annotation(text=f"Correlation: {correlation:.2f}",
+                                   xref='x domain', yref='y domain',
+                                   x=0.05, y=0.95, showarrow=False,
+                                   row = 1, col=i + 1)
+            else:
+                fig.add_annotation(text=f"Correlation: N/A",
+                                   xref='x domain', yref='y domain',
+                                   x=0.05, y=0.95, showarrow=False,
+                                   row = 1, col=i + 1)
+
+        fig.update_layout(
+            title='GDP vs Life Expectancy Over Time',
+            xaxis=dict(title='GDP per capita (Current US$)'),
+            yaxis=dict(title='Life expectancy at birth, total (years)'),
+        )
+
+        return fig
+
 
 
 if __name__ == '__main__':
