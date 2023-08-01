@@ -5,6 +5,9 @@ import plotly.graph_objs as go
 from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from sklearn.preprocessing import StandardScaler
+from plotly.subplots import make_subplots
+from math import ceil
+
 
 df = pd.read_csv('../data/cleaned_data.csv')
 
@@ -77,12 +80,14 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
+    dcc.Graph(id='employment-ratio-chart'),
     dcc.Graph(id='gdp-line-chart'),
     html.Div([
         dcc.Graph(id='chart-women-job', style={'width': '33%'}),
         dcc.Graph(id='chart-women-industrial-job', style={'width': '33%'}),
         dcc.Graph(id='chart-women-contract', style={'width': '33%'}),
     ], style={'display': 'flex'}),
+
     dcc.Graph(id='enrolment-line-chart'),
     html.Div([
         html.Div([dcc.Graph(id='heatmap-lawscore')], style={'width': '25%'}),
@@ -193,6 +198,134 @@ def update_population_line_chart(selected_countries):
     male_chart = get_standardized_population_chart(selected_countries, 'male')
 
     return total_chart, female_chart, male_chart
+
+
+@app.callback(
+    Output('employment-ratio-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_employment_ratio_chart(selected_countries):
+    if not selected_countries:
+        return go.Figure()
+
+    filtered_df = df_series[df_series['Country'].isin(selected_countries)]
+    filtered_df = filtered_df[filtered_df['Year'] >= 1990]
+
+    filtered_df['Labor force proportion'] = (
+        filtered_df['Labor force, total'] / filtered_df['Population, total']) * 100
+
+    n = len(selected_countries)
+    n_cols = min(5, n)
+    n_rows = ceil(n / n_cols)
+
+    fig = make_subplots(rows=n_rows, cols=n_cols,
+                        subplot_titles=selected_countries, vertical_spacing=0.1)
+
+    min_val_list = []
+    max_val_list = []
+
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Employment Ratio',
+                   line=dict(color='red'),
+                   showlegend=True)
+    )
+
+    fig.add_trace(
+        go.Scatter(x=[None], y=[None],
+                   mode='lines',
+                   name='Labor Force Proportion',
+                   line=dict(color='blue'),
+                   showlegend=True)
+    )
+
+    for i, country in enumerate(selected_countries, start=1):
+        country_df = filtered_df[filtered_df['Country'] == country]
+
+        labor_force_employment_proportion = (
+            country_df['Employment to population ratio, 15+, total (%) (modeled ILO estimate)'] *
+            (country_df['Population, total'] - country_df['Population ages 0-14, total']) /
+            country_df['Population, total']
+        )
+
+        min_country = min(labor_force_employment_proportion.min(),
+                          country_df['Labor force proportion'].min())
+        max_country = max(labor_force_employment_proportion.max(),
+                          country_df['Labor force proportion'].max())
+
+        min_val_list.append(min_country)
+        max_val_list.append(max_country)
+
+        row = ceil(i / n_cols)
+        col = i if i <= n_cols else i % n_cols if i % n_cols != 0 else n_cols
+
+        fig.add_trace(
+            go.Scatter(x=country_df['Year'], y=labor_force_employment_proportion,
+                       name=f'Employment Ratio', hovertemplate='Year=%{x}<br>Employment Ratio=%{y}',
+                       line=dict(color='red'), showlegend=False),
+            row=row, col=col
+        )
+        fig.add_trace(
+            go.Scatter(x=country_df['Year'], y=country_df['Labor force proportion'],
+                       name=f'Labor Force Proportion', hovertemplate='Year=%{x}<br>Labor Force Proportion=%{y}',
+                       line=dict(color='blue'), showlegend=False),
+            row=row, col=col
+        )
+
+    min_val = min(min_val_list)
+    max_val = max(max_val_list)
+
+    fig.update_xaxes(title_text='')
+    fig.update_yaxes(title_text='', secondary_y=False)
+    fig.update_yaxes(title_text='', secondary_y=True)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=False)
+    fig.update_yaxes(range=[min_val-1, max_val+1], secondary_y=True)
+
+    fig.update_layout(
+        height=420*n_rows,
+        title_text='Comparison between Employment Ratio and Labor Force Proportion',
+        showlegend=True,
+        legend=dict(
+            x=0.5,
+            y=-0.5,
+            xanchor='center',
+            yanchor='top',
+            orientation='h',
+            traceorder='normal',
+            font=dict(
+                    family='sans-serif',
+                    size=12,
+                    color='black'
+            ),
+            bordercolor='Black',
+            borderwidth=2
+        ),
+    )
+
+    fig.add_annotation(
+        dict(
+            x=-0.04,
+            y=0.5,
+            showarrow=False,
+            text='Proportions (%)',
+            textangle=-90,
+            xref='paper',
+            yref='paper'
+        )
+    )
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.1,
+            showarrow=False,
+            text='Year',
+            xref='paper',
+            yref='paper'
+        )
+    )
+
+    return fig
 
 
 @app.callback(
