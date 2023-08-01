@@ -583,60 +583,70 @@ def dgp_lifeexpectancy_scatter(selected_countries):
         return go.Figure()
     else:
         fig = make_subplots(rows=1, cols=4, subplot_titles=selected_countries)
-        
+
         for i, country in enumerate(selected_countries):
             country_data = df_series_original[df_series_original['Country'] == country]
 
-            country_data['Year'] = pd.to_datetime(country_data['Year'], format='%Y')
+            country_data['Year'] = pd.to_datetime(
+                country_data['Year'], format='%Y')
             country_data.set_index('Year', inplace=True)
             country_data.interpolate(method='time', inplace=True)
 
-            fig.add_trace(go.Scatter(x=country_data['GDP per capita (Current US$)'], 
+            fig.add_trace(go.Scatter(x=country_data['GDP per capita (Current US$)'],
                                      y=country_data['Life expectancy at birth, total (years)'],
                                      mode='markers',
                                      name=f"{country} data",
                                      showlegend=False),
-                                     row = 1, col=i + 1)
+                          row=1, col=i + 1)
 
             if len(country_data) > 1 and country_data['GDP per capita (Current US$)'].std() != 0 and country_data['Life expectancy at birth, total (years)'].std() != 0:
-                country_data = country_data.dropna(subset=['GDP per capita (Current US$)', 'Life expectancy at birth, total (years)'])
-                
+                country_data = country_data.dropna(
+                    subset=['GDP per capita (Current US$)', 'Life expectancy at birth, total (years)'])
+
                 if country_data['GDP per capita (Current US$)'].nunique() > 1 and country_data['Life expectancy at birth, total (years)'].nunique() > 1:
-                    slope, intercept, _, _, _ = stats.linregress(country_data['GDP per capita (Current US$)'], 
-                                                                country_data['Life expectancy at birth, total (years)'])
+                    slope, intercept, _, _, _ = stats.linregress(country_data['GDP per capita (Current US$)'],
+                                                                 country_data['Life expectancy at birth, total (years)'])
 
                 else:
                     fig.add_annotation(text=f"Correlation: N/A",
-                                    xref='x domain', yref='y domain',
-                                    x=0.05, y=0.95, showarrow=False,
-                                    row = 1, col=i + 1)
+                                       xref='x domain', yref='y domain',
+                                       x=0.05, y=0.95, showarrow=False,
+                                       row=1, col=i + 1)
 
                 fig.add_trace(go.Scatter(x=country_data['GDP per capita (Current US$)'],
-                                         y=slope*country_data['GDP per capita (Current US$)']+intercept,
+                                         y=slope *
+                                         country_data['GDP per capita (Current US$)'] +
+                                         intercept,
                                          mode='lines',
                                          name=f"{country} best fit",
                                          showlegend=False),
-                                         row = 1, col=i + 1)
+                              row=1, col=i + 1)
 
-                correlation = np.corrcoef(country_data['GDP per capita (Current US$)'], country_data['Life expectancy at birth, total (years)'])[0, 1]
+                correlation = np.corrcoef(
+                    country_data['GDP per capita (Current US$)'], country_data['Life expectancy at birth, total (years)'])[0, 1]
                 fig.add_annotation(text=f"Correlation: {correlation:.2f}",
                                    xref='x domain', yref='y domain',
                                    x=0.05, y=0.95, showarrow=False,
-                                   row = 1, col=i + 1)
+                                   row=1, col=i + 1)
             else:
                 fig.add_annotation(text=f"Correlation: N/A",
                                    xref='x domain', yref='y domain',
                                    x=0.05, y=0.95, showarrow=False,
-                                   row = 1, col=i + 1)
+                                   row=1, col=i + 1)
 
         fig.update_layout(
-            title='GDP vs Life Expectancy Over Time',
+
+            title={
+                'text': 'GDP vs Life Expectancy Over Time',
+                'y': 0.9,
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'},
             xaxis=dict(title='GDP per capita (Current US$)'),
-            yaxis=dict(title='Life expectancy at birth, total (years)'),
+            yaxis=dict(title='Total Life expectancy at birth (years)'),
         )
 
         return fig
-
 
 
 if __name__ == '__main__':
