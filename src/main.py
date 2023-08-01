@@ -72,6 +72,9 @@ app.layout = html.Div([
         dcc.Graph(id='line-chart-total', style={'width': '33%'}),
         dcc.Graph(id='line-chart-female', style={'width': '33%'}),
         dcc.Graph(id='line-chart-male', style={'width': '33%'}),], style={'display': 'flex'}),
+
+    dcc.Graph(id='employment-ratio-chart'),
+
     dcc.RangeSlider(
         id='year-slider',
         min=1970,
@@ -80,7 +83,6 @@ app.layout = html.Div([
         value=[1970, 2021],
         marks={i: str(i) for i in range(1960, 2023, 2)}
     ),
-    dcc.Graph(id='employment-ratio-chart'),
     dcc.Graph(id='gdp-line-chart'),
     html.Div([
         dcc.Graph(id='chart-women-job', style={'width': '33%'}),
@@ -179,7 +181,10 @@ def get_standardized_population_chart(selected_countries, population_type):
             traceorder='normal',
             title='',
             bordercolor='Black',
-            borderwidth=2), legend_title_text='')
+            borderwidth=2), legend_title_text='', title={
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'},)
 
         return fig
 
