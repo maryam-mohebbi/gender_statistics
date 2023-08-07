@@ -159,7 +159,14 @@ app.layout = html.Div([
         html.Div([dcc.Graph(id='heatmap-pay')], style={'width': '25%'}),
     ], style={'display': 'flex'}),
     html.Div(style={'height': '50px'}),
-    dcc.Graph(id='multi-scatter-chart'),
+    dcc.Graph(id='life-expextancy-scatter-chart'),
+    dcc.Graph(id='animated-birth-death-chart'),
+    dcc.Graph(id='fertility-line-chart'),
+    dcc.Graph(id='mortality-rate-adult-area-chart'),
+    dcc.Graph(id='mortality-rate-infant-area-chart'),
+    dcc.Graph(id='immunization-heatmap'),
+    dcc.Graph(id='survival-rates-seniors-chart'),
+
 ])
 
 
@@ -403,7 +410,7 @@ def update_employment_ratio_chart(selected_countries):
     fig.add_annotation(
         dict(
             x=0.5,
-            y=-0.1,
+            y=-0.3,
             showarrow=False,
             text='Year',
             xref='paper',
@@ -474,16 +481,58 @@ def update_bar_charts(selected_countries, years_range):
                 x=country_data.index,
                 y=y_values_final,
                 name=country,
-                yaxis='y2',
                 marker_color=country_colors[i % len(country_colors)],
                 width=1,
                 offset=i-1
             )
 
             fig.add_trace(binary_trace)
+
         clean_feature_title = feature.replace(' (1=yes; 0=no)', '')
 
-        fig = update_layout(fig, clean_feature_title, 'Year', '')
+        fig.update_layout(
+            yaxis_tickvals=[1, 2],
+            yaxis_ticktext=['No', 'Yes'],
+            title={
+                'text': clean_feature_title,
+                'y': 0.9,
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis=dict(
+                title='Year',
+                showgrid=True,
+                gridcolor='LightGray',
+                showline=True,
+                linecolor='black',
+            ),
+            yaxis=dict(
+                title='',
+                showgrid=True,
+                gridcolor='LightGray',
+                showline=True,
+                linecolor='black',
+            ),
+            autosize=True,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                x=0.5,
+                y=-0.5,
+                xanchor='center',
+                yanchor='top',
+                orientation='h',
+                traceorder='normal',
+                font=dict(
+                    family='sans-serif',
+                    size=12,
+                    color='black'
+                ),
+                bordercolor='Black',
+                borderwidth=2
+            )
+        )
 
         figures.append(fig)
 
@@ -575,7 +624,7 @@ def update_law_index(selected_countries):
 
 
 @app.callback(
-    Output('multi-scatter-chart', 'figure'),
+    Output('life-expextancy-scatter-chart', 'figure'),
     [Input('country-dropdown', 'value')]
 )
 def dgp_lifeexpectancy_scatter(selected_countries):
@@ -647,6 +696,347 @@ def dgp_lifeexpectancy_scatter(selected_countries):
         )
 
         return fig
+
+
+def get_region(country):
+    for region, countries in regions.items():
+        if country in countries:
+            return region
+    return None
+
+
+@app.callback(
+    Output('animated-birth-death-chart', 'figure'),
+    [Input('region-radio', 'value')]
+)
+def update_birth_death_chart(selected_region):
+    all_countries = [country for sublist in regions.values()
+                     for country in sublist]
+    filtered_df = df_series_original[df_series_original['Country'].isin(
+        all_countries)]
+
+    filtered_df['Region'] = filtered_df['Country'].apply(get_region)
+
+    fig = px.scatter(
+        filtered_df,
+        x='Birth rate, crude (per 1,000 people)',
+        y='Death rate, crude (per 1,000 people)',
+        animation_frame='Year',
+        animation_group='Country',
+        size='Population, total',
+        color='Region',
+        hover_name='Country',
+        size_max=60,
+        labels={
+            'Birth rate, crude (per 1,000 people)': 'Birth Rate (per 1,000 people)',
+            'Death rate, crude (per 1,000 people)': 'Death Rate (per 1,000 people)'
+        }
+    )
+
+    max_rate = max(filtered_df['Birth rate, crude (per 1,000 people)'].max(
+    ), filtered_df['Death rate, crude (per 1,000 people)'].max())
+
+    fig.update_xaxes(range=[0, max_rate+5])
+    fig.update_yaxes(range=[0, 30])
+
+    fig.update_layout(
+        height=500,
+        title={
+            'text': 'Birth vs Death Rate Over Time',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        showlegend=True,
+    )
+
+    return fig
+
+
+def generate_fertility_line_chart(selected_countries):
+    if not selected_countries:
+        return go.Figure()
+
+    column_name = 'Fertility rate, total (births per woman)'
+    filtered_df = df_series[df_series['Country'].isin(
+        selected_countries)][['Year', 'Country', column_name]]
+
+    fig = px.line(filtered_df, x='Year', y=column_name, color='Country',
+                  title='Fertility Rate Over Time')
+
+    fig.update_xaxes(tickangle=45, dtick=5)
+
+    fig.update_layout(showlegend=True,
+                      legend=dict(
+                          x=0.5,
+                          y=-0.5,
+                          xanchor='center',
+                          yanchor='top',
+                          orientation='h',
+                          traceorder='normal',
+                          title='',
+                          bordercolor='Black',
+                          borderwidth=2),
+                      title={
+                          'x': 0.5,
+                          'xanchor': 'center',
+                          'yanchor': 'top'},
+                      yaxis=dict(
+                          title='Fertility Rate Total (births per woman)'),
+                      )
+
+    return fig
+
+
+@app.callback(
+    Output('fertility-line-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_fertility_line_chart(selected_countries):
+    return generate_fertility_line_chart(selected_countries)
+
+
+def create_feature_area_graph(selected_countries, features, graph_title, y_axis_label, legend_titles):
+    if not selected_countries or len(selected_countries) > 4:
+        return go.Figure()
+
+    n = len(selected_countries)
+    n_cols = 4
+    n_rows = 1
+
+    fig = make_subplots(rows=n_rows, cols=n_cols,
+                        subplot_titles=selected_countries,
+                        shared_xaxes=True, vertical_spacing=0.1)
+
+    min_val_list = []
+    max_val_list = []
+
+    for i, country in enumerate(selected_countries):
+        country_df = df_series[df_series['Country'] == country]
+
+        x = country_df['Year']
+        y1 = country_df[features[0]]
+        y2 = country_df[features[1]]
+
+        row = i // n_cols + 1
+        col = i % n_cols + 1
+
+        min_val_list.append(min(y1.min(), y2.min()))
+        max_val_list.append(max(y1.max(), y2.max()))
+
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y1,
+                fill='tozeroy',
+                mode='lines',
+                name=legend_titles[0],
+                line=dict(color='blue'),
+                legendgroup='group1',
+                showlegend=(i == 0)
+            ),
+            row=row, col=col
+        )
+
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y2,
+                fill='tonexty',
+                mode='lines',
+                name=legend_titles[1],
+                line=dict(color='red'),
+                legendgroup='group2',
+                showlegend=(i == 0)
+            ),
+            row=row, col=col
+        )
+
+    if min_val_list:
+        min_val = min(min_val_list)
+        max_val = max(max_val_list)
+        fig.update_yaxes(range=[min_val - 1, max_val + 1])
+
+    fig.update_layout(
+        height=500,
+        title={
+            'text': graph_title,
+            'y': 0.9,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+
+        legend=dict(
+            x=0.5,
+            y=-0.4,
+            xanchor='center',
+            yanchor='top',
+            orientation='h',
+            traceorder='normal',
+            font=dict(
+                family='sans-serif',
+                size=12,
+                color='black'
+            ),
+            bordercolor='Black',
+            borderwidth=2
+        ),
+    )
+
+    fig.add_annotation(
+        dict(
+            x=-0.04,
+            y=0.5,
+            showarrow=False,
+            text=y_axis_label,
+            textangle=-90,
+            xref='paper',
+            yref='paper'
+        )
+    )
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.3,
+            showarrow=False,
+            text='Year',
+            xref='paper',
+            yref='paper'
+        )
+    )
+
+    return fig
+
+
+@app.callback(
+    Output('mortality-rate-adult-area-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def mortality_rate_adult_graph(selected_countries):
+    features = [
+        'Mortality rate, adult, female (per 1,000 female adults)',
+        'Mortality rate, adult, male (per 1,000 male adults)'
+    ]
+    legend_titles = ['Female Adult Mortality Rate',
+                     'Male Adult Mortality Rate']
+    return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Adult) Over Time', 'Mortality Rate (per 1,000 adults)', legend_titles)
+
+
+@app.callback(
+    Output('mortality-rate-infant-area-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def mortality_rate_infant_graph(selected_countries):
+    features = [
+        'Number of infant deaths, female',
+        'Number of infant deaths, male'
+    ]
+    legend_titles = ['Female Infant Mortality Rate',
+                     'Male Infant Mortality Rate']
+    return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Infant) Over Time', 'Mortality Rate', legend_titles)
+
+
+@app.callback(
+    Output('immunization-heatmap', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_immunization_heatmap(selected_countries):
+    if not selected_countries or len(selected_countries) > 4:
+        return go.Figure()
+    else:
+
+        filtered_df = df_series_original[df_series_original['Country'].isin(
+            selected_countries)]
+        filtered_df = filtered_df[filtered_df['Year'] >= 1980]
+
+        dpt_data = filtered_df.pivot(index='Country', columns='Year',
+                                     values='Immunization, DPT (% of children ages 12-23 months)')
+        measles_data = filtered_df.pivot(
+            index='Country', columns='Year', values='Immunization, measles (% of children ages 12-23 months)')
+
+        fig = make_subplots(rows=1, cols=2,
+                            subplot_titles=('Immunization, DPT',
+                                            'Immunization, measles'),
+                            shared_yaxes=True)
+
+        fig.add_trace(
+            go.Heatmap(z=dpt_data.values,
+                       x=dpt_data.columns,
+                       y=dpt_data.index,
+                       colorscale='Viridis',
+                       zmin=0,
+                       zmax=100,
+                       showscale=True
+                       ),
+            row=1, col=1
+        )
+
+        fig.add_trace(
+            go.Heatmap(z=measles_data.values,
+                       x=measles_data.columns,
+                       y=measles_data.index,
+                       colorscale='Viridis',
+                       zmin=0,
+                       zmax=100,
+                       showscale=False
+                       ),
+            row=1, col=2
+        )
+
+        fig.update_layout(
+            title_text='Child Immunization Rates Over Time (% of Children Ages 12-23 Months)', title_x=0.5)
+        fig.update_xaxes(tickangle=45, dtick=3)
+
+    return fig
+
+
+@app.callback(
+    Output('survival-rates-seniors-chart', 'figure'),
+    [Input('region-radio', 'value')]
+)
+def survival_rates_seniors_chart(selected_region):
+    all_countries = [country for sublist in regions.values()
+                     for country in sublist]
+    filtered_df = df_series_original[df_series_original['Country'].isin(
+        all_countries)]
+
+    filtered_df['Region'] = filtered_df['Country'].apply(get_region)
+
+    fig = px.scatter(
+        filtered_df,
+        x='Survival to age 65, male, (% of cohort)',
+        y='Survival to age 65, female, (% of cohort)',
+        animation_frame='Year',
+        animation_group='Country',
+        size='Population, total',
+        color='Region',
+        hover_name='Country',
+        size_max=60,
+        labels={
+            'Survival to age 65, male, (% of cohort)': 'Survival Rate (Male)',
+            'Survival to age 65, female, (% of cohort)': 'Survival Rate (Female)'
+        }
+
+    )
+
+    max_rate = max(filtered_df['Survival to age 65, male, (% of cohort)'].max(
+    ), filtered_df['Survival to age 65, female, (% of cohort)'].max())
+
+    fig.update_xaxes(range=[0, max_rate+10])
+    fig.update_yaxes(range=[0, max_rate+10])
+
+    fig.update_layout(
+        height=500,
+        title={
+            'text': 'Survival Rates for Seniors Over Time (% of cohort)',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        showlegend=True,
+    )
+
+    return fig
 
 
 if __name__ == '__main__':
