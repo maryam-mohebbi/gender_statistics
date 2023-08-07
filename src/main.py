@@ -162,6 +162,7 @@ app.layout = html.Div([
     dcc.Graph(id='life-expextancy-scatter-chart'),
     dcc.Graph(id='animated-birth-death-chart'),
     dcc.Graph(id='fertility-line-chart'),
+    dcc.Graph(id='mortality-rate-area-chart'),
 
 ])
 
@@ -791,6 +792,127 @@ def generate_fertility_line_chart(selected_countries):
 def update_fertility_line_chart(selected_countries):
     return generate_fertility_line_chart(selected_countries)
 
+@app.callback(
+    Output('mortality-rate-area-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def create_stacked_area_graph(selected_countries):
+    if not selected_countries or len(selected_countries) > 4:
+        return go.Figure()
+
+    n = len(selected_countries)
+    n_cols = 4
+    n_rows = 1
+
+    fig = make_subplots(rows=n_rows, cols=n_cols,
+                        subplot_titles=selected_countries, 
+                        shared_xaxes=True, vertical_spacing=0.1)
+
+    features = [
+        'Mortality rate, adult, female (per 1,000 female adults)',
+        'Mortality rate, adult, male (per 1,000 male adults)'
+    ]
+
+    min_val_list = []
+    max_val_list = []
+
+    for i, country in enumerate(selected_countries):
+        country_df = df_series[df_series['Country'] == country]
+        
+        x = country_df['Year']
+        y1 = country_df[features[0]]
+        y2 = country_df[features[1]]
+
+        row = i // n_cols + 1
+        col = i % n_cols + 1
+        
+        min_val_list.append(min(y1.min(), y2.min()))
+        max_val_list.append(max(y1.max(), y2.max()))
+
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y1,
+                fill='tozeroy',
+                mode='lines',
+                name='Female Mortality Rate',
+                line=dict(color='blue'),
+                legendgroup="female",
+                showlegend=(i == 0)
+            ),
+            row=row, col=col
+        )
+        
+        fig.add_trace(
+            go.Scatter(
+                x=x,
+                y=y2,
+                fill='tonexty',
+                mode='lines',
+                name='Male Mortality Rate',
+                line=dict(color='red'),
+                legendgroup="male",
+                showlegend=(i == 0)
+            ),
+            row=row, col=col
+        )
+
+    if min_val_list:  # check if the list is not empty
+        min_val = min(min_val_list)
+        max_val = max(max_val_list)
+        fig.update_yaxes(range=[min_val - 1, max_val + 1])
+
+    fig.update_yaxes(range=[min_val - 1, max_val + 1])
+
+    fig.update_layout(
+        height=500,
+        title={
+            'text': 'Mortality Rate (Adult) Over Time',
+            'y': 0.9,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        
+        legend=dict(
+            x=0.5,
+            y=-0.4,
+            xanchor='center',
+            yanchor='top',
+            orientation='h',
+            traceorder='normal',
+            font=dict(
+                family='sans-serif',
+                size=12,
+                color='black'
+            ),
+            bordercolor='Black',
+            borderwidth=2
+        ),
+    )
+
+    fig.add_annotation(
+        dict(
+            x=-0.04,
+            y=0.5,
+            showarrow=False,
+            text='Mortality Rate',
+            textangle=-90,
+            xref='paper',
+            yref='paper'
+        )
+    )
+    fig.add_annotation(
+        dict(
+            x=0.5,
+            y=-0.3,
+            showarrow=False,
+            text='Year',
+            xref='paper',
+            yref='paper'
+        )
+    )
+
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
