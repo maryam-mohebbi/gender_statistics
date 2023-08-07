@@ -792,11 +792,7 @@ def generate_fertility_line_chart(selected_countries):
 def update_fertility_line_chart(selected_countries):
     return generate_fertility_line_chart(selected_countries)
 
-@app.callback(
-    Output('mortality-rate-area-chart', 'figure'),
-    [Input('country-dropdown', 'value')]
-)
-def create_stacked_area_graph(selected_countries):
+def create_feature_area_graph(selected_countries, features, graph_title, y_axis_label, legend_titles):
     if not selected_countries or len(selected_countries) > 4:
         return go.Figure()
 
@@ -805,13 +801,8 @@ def create_stacked_area_graph(selected_countries):
     n_rows = 1
 
     fig = make_subplots(rows=n_rows, cols=n_cols,
-                        subplot_titles=selected_countries, 
+                        subplot_titles=selected_countries,
                         shared_xaxes=True, vertical_spacing=0.1)
-
-    features = [
-        'Mortality rate, adult, female (per 1,000 female adults)',
-        'Mortality rate, adult, male (per 1,000 male adults)'
-    ]
 
     min_val_list = []
     max_val_list = []
@@ -835,9 +826,9 @@ def create_stacked_area_graph(selected_countries):
                 y=y1,
                 fill='tozeroy',
                 mode='lines',
-                name='Female Mortality Rate',
+                name=legend_titles[0],
                 line=dict(color='blue'),
-                legendgroup="female",
+                legendgroup='group1',
                 showlegend=(i == 0)
             ),
             row=row, col=col
@@ -849,25 +840,23 @@ def create_stacked_area_graph(selected_countries):
                 y=y2,
                 fill='tonexty',
                 mode='lines',
-                name='Male Mortality Rate',
+                name=legend_titles[1], 
                 line=dict(color='red'),
-                legendgroup="male",
+                legendgroup='group2',
                 showlegend=(i == 0)
             ),
             row=row, col=col
         )
 
-    if min_val_list:  # check if the list is not empty
+    if min_val_list:
         min_val = min(min_val_list)
         max_val = max(max_val_list)
         fig.update_yaxes(range=[min_val - 1, max_val + 1])
 
-    fig.update_yaxes(range=[min_val - 1, max_val + 1])
-
     fig.update_layout(
         height=500,
         title={
-            'text': 'Mortality Rate (Adult) Over Time',
+            'text': graph_title,
             'y': 0.9,
             'x': 0.5,
             'xanchor': 'center',
@@ -895,7 +884,7 @@ def create_stacked_area_graph(selected_countries):
             x=-0.04,
             y=0.5,
             showarrow=False,
-            text='Mortality Rate',
+            text=y_axis_label,
             textangle=-90,
             xref='paper',
             yref='paper'
@@ -913,6 +902,18 @@ def create_stacked_area_graph(selected_countries):
     )
 
     return fig
+
+@app.callback(
+    Output('mortality-rate-area-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def mortality_rate_graph(selected_countries):
+    features = [
+        'Mortality rate, adult, female (per 1,000 female adults)',
+        'Mortality rate, adult, male (per 1,000 male adults)'
+    ]
+    legend_titles = ['Female Adult Mortality Rate', 'Male Adult Mortality Rate']
+    return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Adult) Over Time', 'Mortality Rate (per 1,000 adults)', legend_titles)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
