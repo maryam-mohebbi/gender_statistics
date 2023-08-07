@@ -403,7 +403,7 @@ def update_employment_ratio_chart(selected_countries):
     fig.add_annotation(
         dict(
             x=0.5,
-            y=-0.1,
+            y=-0.3,
             showarrow=False,
             text='Year',
             xref='paper',
@@ -474,16 +474,58 @@ def update_bar_charts(selected_countries, years_range):
                 x=country_data.index,
                 y=y_values_final,
                 name=country,
-                yaxis='y2',
                 marker_color=country_colors[i % len(country_colors)],
                 width=1,
                 offset=i-1
             )
 
             fig.add_trace(binary_trace)
+
         clean_feature_title = feature.replace(' (1=yes; 0=no)', '')
 
-        fig = update_layout(fig, clean_feature_title, 'Year', '')
+        fig.update_layout(
+            yaxis_tickvals=[1, 2],
+            yaxis_ticktext=['No', 'Yes'],
+            title={
+                'text': clean_feature_title,
+                'y': 0.9,
+                'x': 0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'
+            },
+            xaxis=dict(
+                title='Year',
+                showgrid=True,
+                gridcolor='LightGray',
+                showline=True,
+                linecolor='black',
+            ),
+            yaxis=dict(
+                title='',
+                showgrid=True,
+                gridcolor='LightGray',
+                showline=True,
+                linecolor='black',
+            ),
+            autosize=True,
+            plot_bgcolor='rgba(0,0,0,0)',
+            paper_bgcolor='rgba(0,0,0,0)',
+            legend=dict(
+                x=0.5,
+                y=-0.5,
+                xanchor='center',
+                yanchor='top',
+                orientation='h',
+                traceorder='normal',
+                font=dict(
+                    family='sans-serif',
+                    size=12,
+                    color='black'
+                ),
+                bordercolor='Black',
+                borderwidth=2
+            )
+        )
 
         figures.append(fig)
 
