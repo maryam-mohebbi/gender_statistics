@@ -162,7 +162,8 @@ app.layout = html.Div([
     dcc.Graph(id='life-expextancy-scatter-chart'),
     dcc.Graph(id='animated-birth-death-chart'),
     dcc.Graph(id='fertility-line-chart'),
-    dcc.Graph(id='mortality-rate-area-chart'),
+    dcc.Graph(id='mortality-rate-adult-area-chart'),
+    dcc.Graph(id='mortality-rate-infant-area-chart'),
 
 ])
 
@@ -904,16 +905,29 @@ def create_feature_area_graph(selected_countries, features, graph_title, y_axis_
     return fig
 
 @app.callback(
-    Output('mortality-rate-area-chart', 'figure'),
+    Output('mortality-rate-adult-area-chart', 'figure'),
     [Input('country-dropdown', 'value')]
 )
-def mortality_rate_graph(selected_countries):
+def mortality_rate_adult_graph(selected_countries):
     features = [
         'Mortality rate, adult, female (per 1,000 female adults)',
         'Mortality rate, adult, male (per 1,000 male adults)'
     ]
     legend_titles = ['Female Adult Mortality Rate', 'Male Adult Mortality Rate']
     return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Adult) Over Time', 'Mortality Rate (per 1,000 adults)', legend_titles)
+
+
+@app.callback(
+    Output('mortality-rate-infant-area-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def mortality_rate_infant_graph(selected_countries):
+    features = [
+        'Number of infant deaths, female',
+        'Number of infant deaths, male'
+    ]
+    legend_titles = ['Female Infant Mortality Rate', 'Male Infant Mortality Rate']
+    return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Infant) Over Time', 'Mortality Rate', legend_titles)
 
 if __name__ == '__main__':
     app.run_server(debug=True)
