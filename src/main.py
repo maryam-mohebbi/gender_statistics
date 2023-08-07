@@ -164,6 +164,7 @@ app.layout = html.Div([
     dcc.Graph(id='fertility-line-chart'),
     dcc.Graph(id='mortality-rate-adult-area-chart'),
     dcc.Graph(id='mortality-rate-infant-area-chart'),
+    dcc.Graph(id='immunization-heatmap'),
 
 ])
 
@@ -928,6 +929,57 @@ def mortality_rate_infant_graph(selected_countries):
     ]
     legend_titles = ['Female Infant Mortality Rate', 'Male Infant Mortality Rate']
     return create_feature_area_graph(selected_countries, features, 'Mortality Rate (Infant) Over Time', 'Mortality Rate', legend_titles)
+
+
+
+@app.callback(
+    Output('immunization-heatmap', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_immunization_heatmap(selected_countries):
+    if not selected_countries or len(selected_countries) > 4:
+        return go.Figure()
+    else:
+        
+        filtered_df = df_series_original[df_series_original['Country'].isin(selected_countries)]
+        filtered_df = filtered_df[filtered_df['Year'] >= 1980]
+        
+        dpt_data = filtered_df.pivot(index='Country', columns='Year', values='Immunization, DPT (% of children ages 12-23 months)')
+        measles_data = filtered_df.pivot(index='Country', columns='Year', values='Immunization, measles (% of children ages 12-23 months)')
+        
+        fig = make_subplots(rows=1, cols=2,
+                            subplot_titles=('Immunization, DPT', 'Immunization, measles'),
+                            shared_yaxes=True)
+        
+        fig.add_trace(
+            go.Heatmap(z=dpt_data.values,
+                       x=dpt_data.columns,
+                       y=dpt_data.index,
+                       colorscale='Viridis',
+                       zmin=0,
+                       zmax=100,
+                       showscale=True
+                       ),
+            row=1, col=1
+        )
+        
+        fig.add_trace(
+            go.Heatmap(z=measles_data.values,
+                       x=measles_data.columns,
+                       y=measles_data.index,
+                       colorscale='Viridis',
+                       zmin=0,
+                       zmax=100,
+                       showscale=False
+                       ),
+            row=1, col=2
+        )
+        
+        fig.update_layout(title_text='Child Immunization Rates Over Time (% of Children Ages 12-23 Months)', title_x=0.5)
+        fig.update_xaxes(tickangle=45, dtick=3)
+    
+    return fig
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
