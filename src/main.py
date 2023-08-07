@@ -159,8 +159,10 @@ app.layout = html.Div([
         html.Div([dcc.Graph(id='heatmap-pay')], style={'width': '25%'}),
     ], style={'display': 'flex'}),
     html.Div(style={'height': '50px'}),
-    dcc.Graph(id='multi-scatter-chart'),
+    dcc.Graph(id='life-expextancy-scatter-chart'),
     dcc.Graph(id='animated-birth-death-chart'),
+    dcc.Graph(id='fertility-line-chart'),
+
 ])
 
 
@@ -618,7 +620,7 @@ def update_law_index(selected_countries):
 
 
 @app.callback(
-    Output('multi-scatter-chart', 'figure'),
+    Output('life-expextancy-scatter-chart', 'figure'),
     [Input('country-dropdown', 'value')]
 )
 def dgp_lifeexpectancy_scatter(selected_countries):
@@ -698,6 +700,7 @@ def get_region(country):
             return region
     return None
 
+
 @app.callback(
     Output('animated-birth-death-chart', 'figure'),
     [Input('region-radio', 'value')]
@@ -744,6 +747,49 @@ def update_birth_death_chart(selected_region):
     )
 
     return fig
+
+
+def generate_fertility_line_chart(selected_countries):
+    if not selected_countries:
+        return go.Figure()
+
+    column_name = 'Fertility rate, total (births per woman)'
+    filtered_df = df_series[df_series['Country'].isin(
+        selected_countries)][['Year', 'Country', column_name]]
+
+    fig = px.line(filtered_df, x='Year', y=column_name, color='Country',
+                  title='Fertility Rate Over Time')
+
+    fig.update_xaxes(tickangle=45, dtick=5)
+
+    fig.update_layout(showlegend=True,
+                      legend=dict(
+                          x=0.5,
+                          y=-0.5,
+                          xanchor='center',
+                          yanchor='top',
+                          orientation='h',
+                          traceorder='normal',
+                          title='',
+                          bordercolor='Black',
+                          borderwidth=2),
+                      title={
+                          'x': 0.5,
+                          'xanchor': 'center',
+                          'yanchor': 'top'},
+                      yaxis=dict(
+                          title='Fertility Rate Total (births per woman)'),
+                      )
+
+    return fig
+
+
+@app.callback(
+    Output('fertility-line-chart', 'figure'),
+    [Input('country-dropdown', 'value')]
+)
+def update_fertility_line_chart(selected_countries):
+    return generate_fertility_line_chart(selected_countries)
 
 
 if __name__ == '__main__':
