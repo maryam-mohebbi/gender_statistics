@@ -160,6 +160,7 @@ app.layout = html.Div([
     ], style={'display': 'flex'}),
     html.Div(style={'height': '50px'}),
     dcc.Graph(id='multi-scatter-chart'),
+    dcc.Graph(id='animated-birth-death-chart'),
 ])
 
 
@@ -689,6 +690,60 @@ def dgp_lifeexpectancy_scatter(selected_countries):
         )
 
         return fig
+
+
+def get_region(country):
+    for region, countries in regions.items():
+        if country in countries:
+            return region
+    return None
+
+@app.callback(
+    Output('animated-birth-death-chart', 'figure'),
+    [Input('region-radio', 'value')]
+)
+def update_birth_death_chart(selected_region):
+    all_countries = [country for sublist in regions.values()
+                     for country in sublist]
+    filtered_df = df_series_original[df_series_original['Country'].isin(
+        all_countries)]
+
+    filtered_df['Region'] = filtered_df['Country'].apply(get_region)
+
+    fig = px.scatter(
+        filtered_df,
+        x='Birth rate, crude (per 1,000 people)',
+        y='Death rate, crude (per 1,000 people)',
+        animation_frame='Year',
+        animation_group='Country',
+        size='Population, total',
+        color='Region',
+        hover_name='Country',
+        size_max=60,
+        labels={
+            'Birth Rate (per 1,000 people)',
+            'Death rate, crude (per 1,000 people)'
+        }
+    )
+
+    max_rate = max(filtered_df['Birth rate, crude (per 1,000 people)'].max(
+    ), filtered_df['Death rate, crude (per 1,000 people)'].max())
+
+    fig.update_xaxes(range=[0, max_rate+5])
+    fig.update_yaxes(range=[0, 30])
+
+    fig.update_layout(
+        height=500,
+        title={
+            'text': 'Birth vs Death Rate Over Time',
+            'y': 0.95,
+            'x': 0.5,
+            'xanchor': 'center',
+            'yanchor': 'top'},
+        showlegend=True,
+    )
+
+    return fig
 
 
 if __name__ == '__main__':
